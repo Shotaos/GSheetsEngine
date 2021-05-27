@@ -1,5 +1,9 @@
 import os
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem
+from PyQt5 import QtGui
+
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel
+from PyQt5.QtGui import QBrush, QColor
+from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
         
@@ -18,9 +22,12 @@ class SheetsEngineUI(QMainWindow):
         rowCount = self.main_table.rowCount()
         columnCount = self.main_table.columnCount()
         self.main_table.insertRow(rowCount)
-       
+        q = QLabel(self)
         for col in range(columnCount):
-            self.main_table.setItem(rowCount, col, QTableWidgetItem(str(row_values[col])))
+            i = QTableWidgetItem(str(row_values[col]))
+            if col == 0:
+                i.setForeground(QBrush(QColor(0,0,127), Qt.BrushStyle.SolidPattern))
+            self.main_table.setItem(rowCount, col, i)
 
     def resize_table(self):
         self.main_table.resizeColumnsToContents()
@@ -41,3 +48,5 @@ class SheetsEngineUI(QMainWindow):
         self.add_topic_dropdown.addItems(topics)
         self.search_topic_dropdown.addItems(topics)
 
+    def get_search_text(self):
+        return self.search_line_input.text()

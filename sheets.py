@@ -1,6 +1,5 @@
 import os.path
 import re
-from pprint import pprint
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -43,7 +42,7 @@ class GoogleSheets():
 		return [sheet['properties'] for sheet in response['sheets']]
 
 	def get_sheet_names(self):
-		sheets = self.get_sheets_info()
+		sheets = self.get_sheet_info()
 		return [sheet['title'] for sheet in sheets]
 
 	def get_sheet_data(self, sheet):
@@ -82,5 +81,3 @@ class GoogleSheets():
 	def create_doc(self, name):
 		response =  self.docs.create(body={'title' : name}).execute()
 		return "https://docs.google.com/document/d/" + response['documentId'] + "/edit"
-		
-

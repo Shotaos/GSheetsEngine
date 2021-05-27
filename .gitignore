@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 .vscode/
 gsheetsengine.code-workspace
+credentials.json
+token.json

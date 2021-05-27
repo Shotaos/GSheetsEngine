@@ -18,15 +18,19 @@ class SheetsEngineUI(QMainWindow):
         self.main_table.setColumnCount(len(columns))
         self.main_table.setHorizontalHeaderLabels(columns)
 
-    def addRow(self, row_values):
+    def addRow(self, row_values, link):
         rowCount = self.main_table.rowCount()
         columnCount = self.main_table.columnCount()
         self.main_table.insertRow(rowCount)
+
+        # Insert first column
         q = QLabel(self)
-        for col in range(columnCount):
+        q.setOpenExternalLinks(True)
+        q.setText('<a href="{}">{}</a>'.format(link, row_values[0]))
+        self.main_table.setCellWidget(rowCount, 0, q)
+
+        for col in range(1, columnCount):
             i = QTableWidgetItem(str(row_values[col]))
-            if col == 0:
-                i.setForeground(QBrush(QColor(0,0,127), Qt.BrushStyle.SolidPattern))
             self.main_table.setItem(rowCount, col, i)
 
     def resize_table(self):

@@ -26,7 +26,7 @@ class SheetsController():
         if rows:
             for row in rows:
                 topic, category, title, link = row
-                self._view.addRow([title, category, topic])
+                self._view.addRow([title, category, topic], link)
         
     def _init_topics(self):
         self._view.populate_topic_dropdowns(self._sheets)
@@ -35,7 +35,8 @@ class SheetsController():
         sheet = self._view.get_topic_text()
         category = self._view.get_category_text()
         title = self._view.get_title_text()
-        self.gservice.insert_row(sheet, (category, title, "http://drive/link"))
+        url = self.gservice.create_doc(title)
+        self.gservice.insert_row(sheet, (category, title, url))
         #TODO - clear table here
         self._add_rows(self.gservice.search(title))
 

@@ -6,6 +6,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from config import GOOGLE_APP_CONFIG
 
 
 TOKEN_DIR= Path.home() / ".sheetsearch"
@@ -57,8 +58,8 @@ class GoogleSheets():
 		    if creds and creds.expired and creds.refresh_token:
 			    creds.refresh(Request())
 		    else:
-			    flow = InstalledAppFlow.from_client_secrets_file(
-			    'credentials.json', self.SCOPES)
+			    flow = InstalledAppFlow.from_client_config(
+			    GOOGLE_APP_CONFIG, self.SCOPES)
 			    creds = flow.run_local_server(port=4338)
 
 		    # Save the credentials for the next run

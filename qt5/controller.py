@@ -19,8 +19,8 @@ class SheetsController():
 
     def _handle_search(self):
         query = self._view.get_search_text()
-        # self._view.get_selected_filters()
-        self._add_rows(self.gservice.search(query))
+        if query:
+            self._add_rows(self.gservice.search(query))
 
     def _add_rows(self, rows):
         if rows:

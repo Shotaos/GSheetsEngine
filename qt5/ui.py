@@ -13,7 +13,11 @@ class SheetsEngineUI(QMainWindow):
         super().__init__()
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'mainUI.ui'), self)
         self.show()
+        self.search_line_input.returnPressed.connect(self.search_button.click)
     
+    def akta(self):
+        print("KATA")
+
     def add_table_columns(self, columns):
         self.main_table.setColumnCount(len(columns))
         self.main_table.setHorizontalHeaderLabels(columns)

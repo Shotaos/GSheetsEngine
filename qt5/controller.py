@@ -8,6 +8,7 @@ class SheetsController():
         self._sheets = self.gservice.get_sheet_names()
         self._view.add_table_columns(['Title', 'Cateogry', 'Topic'])
         # Connect signals and slots
+        self._init_topics()
         self._connectSignals()
 
     def _handle_search(self):
@@ -22,8 +23,17 @@ class SheetsController():
                 self._view.addRow([title, category, topic])
         
     def _init_topics(self):
-        pass
+        self._view.populate_topic_dropdowns(self._sheets)
+
+    def _handle_add_record(self):
+        sheet = self._view.get_topic_text()
+        category = self._view.get_category_text()
+        title = self._view.get_title_text()
+        self.gservice.insert_row(sheet, (category, title, "http://drive/link"))
+        #TODO - clear table here
+        self._add_rows(self.gservice.search(title))
 
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
+        self._view.add_record.clicked.connect(self._handle_add_record)
 

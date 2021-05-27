@@ -32,6 +32,7 @@ class SheetsEngineUI(QMainWindow):
     def resize_table(self):
         self.main_table.resizeColumnsToContents()
 
+
     def get_column_by_header(self, header):
         num_of_columns = self.main_table.columnCount()
         for col in range(num_of_columns):
@@ -40,13 +41,22 @@ class SheetsEngineUI(QMainWindow):
                 return col
         return None
 
+    def get_topic_text(self):
+        return self.add_topic_dropdown.currentText()
+
+    def get_category_text(self):
+        return self.category_line.text()
+
+    def get_title_text(self):
+        return self.title_line.text()
+
     def clear_table(self):
         self.main_table.setColumnCount(0)
         self.main_table.setRowCount(0)
 
     def populate_topic_dropdowns(self, topics):
         self.add_topic_dropdown.addItems(topics)
-        self.search_topic_dropdown.addItems(topics)
+        #self.search_topic_dropdown.addItems(topics)
 
     def get_search_text(self):
         return self.search_line_input.text()

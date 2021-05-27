@@ -1,15 +1,21 @@
 from sheets import GoogleSheets
+from qt5.ui import alert_dialog
 
 class SheetsController():
     def __init__(self, model, view):
         self._model = model
         self._view = view
         self.gservice = GoogleSheets()
+
+        if not self.gservice.check_credentials():
+            alert_dialog()
+
         self._sheets = self.gservice.get_sheet_names()
         self._view.add_table_columns(['Title', 'Cateogry', 'Topic'])
         # Connect signals and slots
         self._init_topics()
         self._connectSignals()
+
 
     def _handle_search(self):
         query = self._view.get_search_text()

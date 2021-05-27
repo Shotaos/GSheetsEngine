@@ -1,8 +1,8 @@
 import os
 from PyQt5 import QtGui
 
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel
-from PyQt5.QtGui import QBrush, QColor
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox
+from PyQt5.QtGui import QBrush, QColor, QIcon
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
@@ -60,3 +60,19 @@ class SheetsEngineUI(QMainWindow):
 
     def get_search_text(self):
         return self.search_line_input.text()
+
+
+def alert_dialog():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Information)
+    message = """
+    <p align='center'>Authentication is required.
+    Default browser will open after you press the OK Button. Please authenticate with your Google account.</p>
+    """
+    msgBox.setText(message)
+    msgBox.setWindowTitle("Login required")
+    msgBox.setStandardButtons(QMessageBox.Ok)
+
+    returnValue = msgBox.exec()
+    if returnValue == QMessageBox.Ok:
+        print('OK')

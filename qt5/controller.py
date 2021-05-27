@@ -1,3 +1,4 @@
+import webbrowser
 from sheets import GoogleSheets
 from qt5.ui import alert_dialog
 
@@ -37,7 +38,7 @@ class SheetsController():
         title = self._view.get_title_text()
         url = self.gservice.create_doc(title)
         self.gservice.insert_row(sheet, (category, title, url))
-        #TODO - clear table here
+        webbrowser.open(url, new=2)
         self._add_rows(self.gservice.search(title))
 
     def _connectSignals(self):

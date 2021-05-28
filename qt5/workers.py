@@ -37,7 +37,7 @@ class GoogleServiceWorker(QThread):
                                 self.recordsDone.emit(sheets)
                         elif self.command == "search":
                                 result = google.search(*self.args)
-                                self.log.emit("Query: '{}'; found {} results.".format(self.args[0], len(result)))
+                                self.log.emit("Query: '{}'      Found {} results.".format(self.args[0], len(result)))
                                 self.recordsDone.emit(result)
                         elif self.command == "insert_row":
                                 pass
@@ -48,6 +48,10 @@ class GoogleServiceWorker(QThread):
                                 webbrowser.open(url, new=2)
                                 google.insert_row(sheet, [category, title, url])
                                 self.recordsDone.emit([[sheet, category, title, url]])
+                except errors.HttpError as e:
+                        self.log.emit("Http error: Most likely sheetID is invalid; " + str(e)[:20])
+                        self.recordsDone.emit([])
+
                 except (errors.Error, socket.error, httplib2.ServerNotFoundError) as e:
                         self.log.emit(str(e))
                         self.recordsDone.emit([])

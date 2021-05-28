@@ -16,7 +16,7 @@ TOKEN_DIR.mkdir(exist_ok=True)
 class GoogleSheets():
 	SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/documents']
 
-	def __init__(self, spreadsheet_id='11IETLAULJA1NpDuRWp7WtnNbvAhIcJKuJNJ-N6vYMm4'):
+	def __init__(self, spreadsheet_id):
 		self.spreadsheet_id = spreadsheet_id
 		self.creds = None
 

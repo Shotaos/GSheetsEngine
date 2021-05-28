@@ -49,7 +49,7 @@ class SheetsController():
     def _check_login(self):
         self._view.start_spinner()
 
-        gservice = GoogleSheets()
+        gservice = GoogleSheets(self.settings['sheetId'])
         if not gservice.check_credentials():
             alert_dialog()
             self.login_worker = GoogleServiceWorker(self.settings['sheetId'], "login")

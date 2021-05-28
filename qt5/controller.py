@@ -71,8 +71,9 @@ class SheetsController():
 
         if query:
             self._view.start_spinner()
-            print(self._view.get_checked_topics())
-            self.worker = GoogleServiceWorker(self.settings['sheetId'], "search", (query, self._view.get_checked_topics()))
+            topics = self._view.get_checked_topics()
+            topics = topics if topics != [] else [s for s in self._sheets if s not in self.settings['exclude_sheets']]
+            self.worker = GoogleServiceWorker(self.settings['sheetId'], "search", (query, topics))
             self.worker.log.connect(self._logger)
             self.worker.recordsDone.connect(self._add_rows)
             self.worker.start()

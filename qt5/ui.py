@@ -22,7 +22,7 @@ class SheetsEngineUI(QMainWindow):
         self.spinner.start() 
 
     def stop_spinner(self):
-        self.spinner.start() 
+        self.spinner.stop() 
 
     def add_table_columns(self, columns):
         self.main_table.setColumnCount(len(columns))

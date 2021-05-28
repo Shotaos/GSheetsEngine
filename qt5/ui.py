@@ -1,14 +1,12 @@
-import os
-from PyQt5 import QtGui
-
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox
-from PyQt5.QtGui import QBrush, QColor, QIcon
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
-
 from qt5.spin import QtWaitingSpinner
+from PyQt5 import uic
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox
+import os
 
-        
+
 class SheetsEngineUI(QMainWindow):
 
     def __init__(self):
@@ -17,12 +15,13 @@ class SheetsEngineUI(QMainWindow):
         self.show()
         self.search_line_input.returnPressed.connect(self.search_button.click)
         self.spinner = QtWaitingSpinner(self, True, True, Qt.ApplicationModal)
-    
+        self.main_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
     def start_spinner(self):
-        self.spinner.start() 
+        self.spinner.start()
 
     def stop_spinner(self):
-        self.spinner.stop() 
+        self.spinner.stop()
 
     def add_table_columns(self, columns):
         self.main_table.setColumnCount(len(columns))
@@ -45,7 +44,6 @@ class SheetsEngineUI(QMainWindow):
 
     def resize_table(self):
         self.main_table.resizeColumnsToContents()
-
 
     def get_column_by_header(self, header):
         num_of_columns = self.main_table.columnCount()
@@ -70,10 +68,24 @@ class SheetsEngineUI(QMainWindow):
 
     def populate_topic_dropdowns(self, topics):
         self.add_topic_dropdown.addItems(topics)
-        #self.search_topic_dropdown.addItems(topics)
+        # self.search_topic_dropdown.addItems(topics)
 
     def get_search_text(self):
         return self.search_line_input.text()
+
+    def add_topic_checkboxes(self, topics):
+        self.topic_checkboxes = []
+        for topic in topics:
+            cb = QCheckBox(topic.capitalize())
+            self.horizontalLayout_5.addWidget(cb)
+            self.topic_checkboxes.append(cb)
+
+    def get_checked_topics(self):
+        topics_chosen = []
+        for cb in self.topic_checkboxes:
+            if cb.isChecked():
+                topics_chosen.append(cb.text())
+        return topics_chosen
 
 
 def alert_dialog():

@@ -8,8 +8,10 @@ class SheetsController():
         self._model = model
         self._view = view
         self._check_login()
-
+        self.gservice = GoogleSheets()
         self._view.add_table_columns(['Title', 'Cateogry', 'Topic'])
+        self._init_topics()
+        # Connect signals and slots
         self._connectSignals()
 
 
@@ -37,7 +39,7 @@ class SheetsController():
 
         if query:
             self._view.start_spinner()
-            self.worker = GoogleServiceWorker("search", (query,))
+            self.worker = GoogleServiceWorker("search", (query, self._view.get_checked_topics()))
             self.worker.log.connect(self._logger)
             self.worker.recordsDone.connect(self._add_rows)
             self.worker.start()
@@ -51,7 +53,11 @@ class SheetsController():
 
     def _init_topics(self, sheets):
         self.sheets = sheets
-        self._view.populate_topic_dropdowns(sheets)
+        
+    def _init_topics(self):
+        self._sheets = self.gservice.get_sheet_names()
+        self._view.add_topic_checkboxes(self._sheets)
+        self._view.populate_topic_dropdowns(self.sheets)
         self._view.stop_spinner()
 
     def _handle_add_record(self):
@@ -65,6 +71,8 @@ class SheetsController():
         self.worker.log.connect(self._logger)
         self.worker.recordsDone.connect(self._add_rows)
         self.worker.start()
+        
+
 
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)

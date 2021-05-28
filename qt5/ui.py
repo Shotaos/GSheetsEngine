@@ -1,7 +1,7 @@
 import os
 from PyQt5 import QtGui
 
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel
+from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -46,7 +46,20 @@ class SheetsEngineUI(QMainWindow):
 
     def populate_topic_dropdowns(self, topics):
         self.add_topic_dropdown.addItems(topics)
-        self.search_topic_dropdown.addItems(topics)
 
     def get_search_text(self):
         return self.search_line_input.text()
+
+    def add_topic_checkboxes(self, topics):
+        self.topic_checkboxes = []
+        for topic in topics:
+            cb = QCheckBox(topic.capitalize())
+            self.horizontalLayout_5.addWidget(cb)
+            self.topic_checkboxes.append(cb)
+    
+    def get_checked_topics(self):
+        topics_chosen = []
+        for cb in self.topic_checkboxes:
+            if cb.isChecked():
+                topics_chosen.append(cb.text())
+        return topics_chosen

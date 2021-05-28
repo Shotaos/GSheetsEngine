@@ -72,7 +72,7 @@ class SheetsController():
         if query:
             self._view.start_spinner()
             topics = self._view.get_checked_topics()
-            topics = topics if topics != [] else [s for s in self._sheets if s not in self.settings['exclude_sheets']]
+            topics = topics if topics != [] else [s for s in self._sheets if s not in self.settings['excludeSheets']]
             self.worker = GoogleServiceWorker(self.settings['sheetId'], "search", (query, topics))
             self.worker.log.connect(self._logger)
             self.worker.recordsDone.connect(self._add_rows)
@@ -89,7 +89,7 @@ class SheetsController():
         
     def _init_topics(self, sheets):
         self._sheets = sheets
-        filtered_sheets = [sheet for sheet in sheets if sheet not in self.settings['exclude_sheets']]
+        filtered_sheets = [sheet for sheet in sheets if sheet not in self.settings['excludeSheets']]
         self._view.add_topic_checkboxes(filtered_sheets)
         self._settings_view.set_settings(self.settings, sheets)
         self._view.populate_topic_dropdowns(filtered_sheets)

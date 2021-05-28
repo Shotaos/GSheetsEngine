@@ -23,14 +23,14 @@ class SettingsUI(QDialog):
 
     def set_settings(self, settings, sheets):
         self.sheetId.setText(settings['sheetId'])
-        self._add_topic_checkboxes(sheets, settings['exclude_sheets'])
+        self._add_topic_checkboxes(sheets, settings['excludeSheets'])
 
     def get_settings(self):
         topics_excluded = []
         for cb in self.sheets:
             if cb.isChecked():
                 topics_excluded.append(cb.text())
-        return {'sheetId' : self.sheetId.text(), 'exclude_sheets' : topics_excluded}
+        return {'sheetId' : self.sheetId.text(), 'excludeSheets' : topics_excluded}
 
 class SheetsEngineUI(QMainWindow):
 

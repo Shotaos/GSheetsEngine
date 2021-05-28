@@ -1,7 +1,6 @@
 import os
-from PyQt5 import QtGui
 
-from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel
+from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -13,7 +12,7 @@ class SheetsEngineUI(QMainWindow):
         super().__init__()
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'mainUI.ui'), self)
         self.show()
-    
+        self.main_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
     def add_table_columns(self, columns):
         self.main_table.setColumnCount(len(columns))
         self.main_table.setHorizontalHeaderLabels(columns)

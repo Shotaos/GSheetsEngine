@@ -6,6 +6,8 @@ from PyQt5.QtGui import QBrush, QColor, QIcon
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
+from qt5.spin import QtWaitingSpinner
+
         
 class SheetsEngineUI(QMainWindow):
 
@@ -14,9 +16,13 @@ class SheetsEngineUI(QMainWindow):
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'mainUI.ui'), self)
         self.show()
         self.search_line_input.returnPressed.connect(self.search_button.click)
+        self.spinner = QtWaitingSpinner(self, True, True, Qt.ApplicationModal)
     
-    def akta(self):
-        print("KATA")
+    def start_spinner(self):
+        self.spinner.start() 
+
+    def stop_spinner(self):
+        self.spinner.start() 
 
     def add_table_columns(self, columns):
         self.main_table.setColumnCount(len(columns))

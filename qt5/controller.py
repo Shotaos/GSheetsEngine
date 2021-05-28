@@ -10,7 +10,6 @@ class SheetsController():
 
         if not self.gservice.check_credentials():
             alert_dialog()
-
         self._sheets = self.gservice.get_sheet_names()
         self._view.add_table_columns(['Title', 'Cateogry', 'Topic'])
         # Connect signals and slots

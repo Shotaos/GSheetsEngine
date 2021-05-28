@@ -49,7 +49,7 @@ class GoogleServiceWorker(QThread):
                                 google.insert_row(sheet, [category, title, url])
                                 self.recordsDone.emit([[sheet, category, title, url]])
                 except errors.HttpError as e:
-                        self.log.emit("Http error: Most likely sheetID is invalid; " + str(e)[:20])
+                        self.log.emit("Http error: Most likely sheetID is invalid.  " + str(e)[:40]+ '...')
                         self.recordsDone.emit([])
 
                 except (errors.Error, socket.error, httplib2.ServerNotFoundError) as e:

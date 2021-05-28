@@ -36,13 +36,14 @@ class GoogleServiceWorker(QThread):
                                 self.recordsDone.emit(sheets)
                         elif self.command == "search":
                                 result = google.search(*self.args)
-                                self.log.emit("for Query: '{}' found {} results.".format(self.args[0], len(result)))
+                                self.log.emit("Query: '{}'; found {} results.".format(self.args[0], len(result)))
                                 self.recordsDone.emit(result)
                         elif self.command == "insert_row":
                                 pass
                         elif self.command == "create_doc":
                                 sheet, category, title = self.args
                                 url = google.create_doc(title)
+                                self.log.emit("Google Doc: '{}' successfully created.".format(title))
                                 webbrowser.open(url, new=2)
                                 google.insert_row(sheet, [category, title, url])
                                 self.recordsDone.emit([[sheet, category, title, url]])

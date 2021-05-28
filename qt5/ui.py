@@ -23,6 +23,9 @@ class SheetsEngineUI(QMainWindow):
     def stop_spinner(self):
         self.spinner.stop()
 
+    def set_log_message(self, message):
+        self.log_text.setText(message)
+
     def add_table_columns(self, columns):
         self.main_table.setColumnCount(len(columns))
         self.main_table.setHorizontalHeaderLabels(columns)

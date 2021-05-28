@@ -81,4 +81,4 @@ class SheetsController():
         self._view.add_record.clicked.connect(self._handle_add_record)
 
     def _logger(self, msg):
-        print(msg)
+        self._view.set_log_message(msg)

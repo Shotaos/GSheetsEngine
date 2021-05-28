@@ -13,10 +13,11 @@ class GoogleServiceWorker(QThread):
         recordsDone = pyqtSignal(list)
      
 
-        def __init__(self, command, args=None, parent=None):
+        def __init__(self, sheetId, command, args=None, parent=None):
                 super(GoogleServiceWorker, self).__init__(parent)
                 self.command = command
                 self.args = args
+                self.sheetId = sheetId
 
         def run(self):
                 if self.command not in ["login", "get_sheets", "search", "insert_row", "create_doc"]:
@@ -24,7 +25,7 @@ class GoogleServiceWorker(QThread):
                         self.recordsDone.emit([])
                         return
                 try:
-                        google = GoogleSheets()
+                        google = GoogleSheets(self.sheetId)
 
                         if self.command == "login":
                                 google.login()

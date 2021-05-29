@@ -1,16 +1,18 @@
+import os
+import sys
 from qt5.spin import QtWaitingSpinner
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog
-import os
+
 
 class SettingsUI(QDialog):
 
     def __init__(self, parent):
         super().__init__(parent)
-        uic.loadUi(os.path.join('qt5', 'gui_elements', 'settUI.ui'), self)
+        uic.loadUi(os.path.join('qt5',
+                                'gui_elements', 'settUI.ui'), self)
 
     def _add_topic_checkboxes(self, topics, excluded):
         self.sheets = []
@@ -30,13 +32,15 @@ class SettingsUI(QDialog):
         for cb in self.sheets:
             if cb.isChecked():
                 topics_excluded.append(cb.text())
-        return {'sheetId' : self.sheetId.text(), 'excludeSheets' : topics_excluded}
+        return {'sheetId': self.sheetId.text(), 'excludeSheets': topics_excluded}
+
 
 class SheetsEngineUI(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        uic.loadUi(os.path.join('qt5', 'gui_elements', 'mainUI.ui'), self)
+        uic.loadUi(os.path.join('qt5',
+                                'gui_elements', 'mainUI.ui'), self)
         self.show()
         self.search_line_input.returnPressed.connect(self.search_button.click)
         self.spinner = QtWaitingSpinner(self, True, True, Qt.ApplicationModal)
@@ -75,7 +79,7 @@ class SheetsEngineUI(QMainWindow):
 
     def clear_table(self):
         self.main_table.setRowCount(0)
-    
+
     def clear_fields(self):
         self.category_line.setText("")
         self.title_line.setText("")

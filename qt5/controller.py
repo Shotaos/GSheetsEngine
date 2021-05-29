@@ -1,4 +1,3 @@
-import webbrowser
 import os
 import json
 from pathlib import Path
@@ -11,8 +10,7 @@ SETTINGS_DIR.mkdir(exist_ok=True)
 SETTINGS_FILE = SETTINGS_DIR / 'settings.json'
 
 class SheetsController():
-    def __init__(self, model, view, settings):
-        self._model = model
+    def __init__(self, view, settings):
         self._view = view
         self._settings_view = settings
         self._init_settings()

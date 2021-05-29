@@ -103,10 +103,10 @@ class GoogleSheets():
 		for sheet in values['valueRanges']:
 			sheet_name = sheet['range'].split('!')[0]
 			for row in sheet['values'][1:]:
-				if re.search(query, row[0] + ' ' + row[1], re.IGNORECASE):
+				if re.search(query, row[1], re.IGNORECASE):
 					result.append([sheet_name] + row)
 					
-		return result
+		return result[::-1]
 
 	def insert_row(self, sheet, row):
 		self.__check_creds_validity()

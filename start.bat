@@ -1,0 +1,1 @@
+"./myvenv/Scripts/activate" & python main.py

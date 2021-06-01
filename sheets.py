@@ -96,15 +96,23 @@ class GoogleSheets():
 		# Get sheet names
 		sheets = sheets if sheets else self.get_sheet_names()
 		# Build the ranges expression ["sheet1!A:C", "sheet2!A:C", "sheet3!A:C"]
-		ranges = [sheet + '!A:C' for sheet in sheets]
+		ranges = [sheet + '!A:D' for sheet in sheets]
 
 		values = self.sheets.values().batchGet(spreadsheetId=self.spreadsheet_id, ranges=ranges).execute()
 
 		for sheet in values['valueRanges']:
-			sheet_name = sheet['range'].split('!')[0]
-			for row in sheet['values'][1:]:
-				if re.search(query, row[1], re.IGNORECASE):
-					result.append([sheet_name] + row)
+			if sheet.get('values'):
+				sheet_name = sheet['range'].split('!')[0]
+
+				for row in sheet['values'][1:]:
+					
+					# Only category is given.
+					if len(row) < 2:
+						continue
+
+					if re.search(query, row[1], re.IGNORECASE):
+						link = '' if len(row) < 3 else row[2]
+						result.append([sheet_name, row[0], row[1], link])
 					
 		return result[::-1]
 

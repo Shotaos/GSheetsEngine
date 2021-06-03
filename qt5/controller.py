@@ -7,7 +7,7 @@ from qt5.workers import GoogleServiceWorker
 
 SETTINGS_DIR= Path.home() / ".sheetsearch"
 SETTINGS_DIR.mkdir(exist_ok=True)
-SETTINGS_FILE = SETTINGS_DIR / 'settings.json'
+SETTINGS_FILE = SETTINGS_DIR / 'sheetsettings.json'
 
 class SheetsController():
     def __init__(self, view, settings):

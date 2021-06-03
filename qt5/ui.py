@@ -1,6 +1,6 @@
 import os
 from qt5.spin import QtWaitingSpinner
-from PyQt5 import uic
+from PyQt5 import QtGui, uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog
@@ -38,6 +38,7 @@ class SheetsEngineUI(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'mainUI.ui'), self)
+        self.setWindowIcon(QtGui.QIcon(os.path.join('assets', 'icon.ico')))
         self.show()
         self.search_line_input.returnPressed.connect(self.search_button.click)
         self.spinner = QtWaitingSpinner(self, True, True, Qt.ApplicationModal)

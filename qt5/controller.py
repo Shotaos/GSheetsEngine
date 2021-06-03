@@ -107,13 +107,16 @@ class SheetsController():
         self.worker.recordsDone.connect(self._add_rows)
         self.worker.start()
         
-
+    def _navigate_to_sheet(self):
+        self.worker = GoogleServiceWorker(self.settings['sheetId'], "open_sheet")
+        self.worker.start()
 
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
         self._view.add_record.clicked.connect(self._handle_add_record)
         self._view.settings_button.clicked.connect(self._open_settings_dialog)
         self._settings_view.okButton.clicked.connect(self._update_settings)
+        self._view.open_sheet_button.clicked.connect(self._navigate_to_sheet)
 
     def _logger(self, msg):
         self._view.set_log_message(msg)

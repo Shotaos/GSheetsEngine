@@ -20,7 +20,7 @@ class GoogleServiceWorker(QThread):
                 self.sheetId = sheetId
 
         def run(self):
-                if self.command not in ["login", "get_sheets", "search", "insert_row", "create_doc"]:
+                if self.command not in ["login", "get_sheets", "search", "insert_row", "create_doc","open_sheet"]:
                         self.log.emit("Wrong command passed to GoogleServiceWorker")
                         self.recordsDone.emit([])
                         return
@@ -48,6 +48,8 @@ class GoogleServiceWorker(QThread):
                                 webbrowser.open(url, new=2)
                                 google.insert_row(sheet, [category, title, url])
                                 self.recordsDone.emit([[sheet, category, title, url]])
+                        elif self.command == "open_sheet":
+                                webbrowser.open("https://docs.google.com/spreadsheets/d/" + self.sheetId + "/edit", new=2)
                 except errors.HttpError as e:
                         self.log.emit("Http error: Most likely sheetID is invalid.  " + str(e)[:40]+ '...')
                         self.recordsDone.emit([])

@@ -4,10 +4,7 @@ from pathlib import Path
 from sheets import GoogleSheets
 from qt5.ui import alert_dialog
 from qt5.workers import GoogleServiceWorker
-
-SETTINGS_DIR= Path.home() / ".sheetsearch"
-SETTINGS_DIR.mkdir(exist_ok=True)
-SETTINGS_FILE = SETTINGS_DIR / 'sheetsettings.json'
+from config import SETTINGS_FILE
 
 class SheetsController():
     def __init__(self, view, settings):

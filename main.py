@@ -12,5 +12,5 @@ def main():
     sys.exit(sheetsApp.exec_())
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

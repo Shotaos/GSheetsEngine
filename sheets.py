@@ -95,8 +95,9 @@ class GoogleSheets():
 
 		if GoogleSheets.cache is not None:
 			for row in GoogleSheets.cache:
-				if re.search(query, row[2], re.IGNORECASE):
-					result.append(row)
+				if not sheets or row[0].lower() in [_.lower() for _ in sheets]:
+					if re.search(query, row[2], re.IGNORECASE):
+						result.append(row)
 			return result
 
 		# Get sheet names
@@ -109,6 +110,10 @@ class GoogleSheets():
 		for sheet in values['valueRanges']:
 			if sheet.get('values'):
 				sheet_name = sheet['range'].split('!')[0]
+
+				# remove unnecessary quote signs
+				if sheet_name.startswith("'") and sheet_name.endswith("'"):
+					sheet_name = sheet_name[1:-1]
 
 				for row in sheet['values'][1:]:
 					
@@ -151,6 +156,10 @@ class GoogleSheets():
 		for sheet in values['valueRanges']:
 			if sheet.get('values'):
 				sheet_name = sheet['range'].split('!')[0]
+
+				# remove unnecessary quote signs
+				if sheet_name.startswith("'") and sheet_name.endswith("'"):
+					sheet_name = sheet_name[1:-1]
 
 				for row in sheet['values'][1:]:
 					# Only category is given.

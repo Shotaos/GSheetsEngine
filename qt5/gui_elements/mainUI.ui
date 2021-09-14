@@ -185,8 +185,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>470</width>
-            <height>69</height>
+            <width>463</width>
+            <height>60</height>
            </rect>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -330,10 +330,10 @@
          <x>0</x>
          <y>0</y>
          <width>753</width>
-         <height>69</height>
+         <height>60</height>
         </rect>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_7"/>
+       <layout class="QHBoxLayout" name="filter_btns_layout"/>
       </widget>
      </widget>
     </item>

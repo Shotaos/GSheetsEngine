@@ -2,8 +2,9 @@ import os
 from qt5.spin import QtWaitingSpinner
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import Qt
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem
 
 
 class SettingsUI(QDialog):
@@ -43,6 +44,7 @@ class SheetsEngineUI(QMainWindow):
         self.search_line_input.returnPressed.connect(self.search_button.click)
         self.spinner = QtWaitingSpinner(self, True, True, Qt.ApplicationModal)
         self.main_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.filter_btns_layout.addStretch(1)
 
     def start_spinner(self):
         self.spinner.start()
@@ -112,17 +114,28 @@ class SheetsEngineUI(QMainWindow):
         for i in reversed(range(layout.count())):
             widgetToRemove = layout.itemAt(i).widget()
             # remove it from the layout list
-            layout.removeWidget(widgetToRemove)
-            # remove it from the gui
-            widgetToRemove.setParent(None)
+            if widgetToRemove:
+                layout.removeWidget(widgetToRemove)
+                # remove it from the gui
+                widgetToRemove.setParent(None)
 
-    def add_topic_checkboxes(self, topics):
+    def add_topic_buttons(self, topics):
         self.topic_checkboxes = []
-        self.clear_layout(self.horizontalLayout_5)
+        layout = self.filter_btns_layout
+        self.clear_layout(layout)
         for topic in topics:
-            cb = QCheckBox(topic.capitalize())
-            self.horizontalLayout_5.addWidget(cb)
+            cb = QPushButton(text=topic.capitalize())
+            cb.setCheckable(True)
+            cb.clicked.connect(lambda : self.topic_button_clicked(cb))
+            cb.setStyleSheet("min-width:150px")
+            cb.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
+            layout.insertWidget(layout.count() - 1, cb)
             self.topic_checkboxes.append(cb)
+        
+
+
+    def topic_button_clicked(self, button):
+        pass
 
     def get_checked_topics(self):
         topics_chosen = []

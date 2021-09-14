@@ -85,9 +85,9 @@ class SheetsController():
     def _init_topics(self, sheets):
         self._sheets = sheets
         filtered_sheets = [sheet for sheet in sheets if sheet not in self.settings['excludeSheets']]
-        self._view.add_topic_checkboxes(filtered_sheets)
+        self._view.add_topic_buttons(filtered_sheets)
         self._settings_view.set_settings(self.settings, sheets)
-        self._view.populate_topic_dropdowns(filtered_sheets)
+        #self._view.populate_topic_dropdowns(filtered_sheets)
         self._view.stop_spinner()
 
     def _handle_add_record(self):
@@ -110,7 +110,7 @@ class SheetsController():
 
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
-        self._view.add_record.clicked.connect(self._handle_add_record)
+        #self._view.add_record.clicked.connect(self._handle_add_record)
         self._view.settings_button.clicked.connect(self._open_settings_dialog)
         self._settings_view.okButton.clicked.connect(self._update_settings)
         self._view.open_sheet_button.clicked.connect(self._navigate_to_sheet)

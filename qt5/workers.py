@@ -6,12 +6,10 @@ import webbrowser
 import httplib2
 
 
-
 class GoogleServiceWorker(QThread):
 
         log = pyqtSignal(str)
         recordsDone = pyqtSignal(list)
-     
 
         def __init__(self, sheetId, command, args=None, parent=None):
                 super(GoogleServiceWorker, self).__init__(parent)
@@ -42,12 +40,13 @@ class GoogleServiceWorker(QThread):
                         elif self.command == "insert_row":
                                 pass
                         elif self.command == "create_doc":
-                                sheet, category, title = self.args
-                                url = google.create_doc(title)
-                                self.log.emit("Google Doc: '{}' successfully created.".format(title))
-                                webbrowser.open(url, new=2)
-                                google.insert_row(sheet, [category, title, url])
-                                self.recordsDone.emit([[sheet, category, title, url]])
+                                data = self.args
+                                doc_url, code_url = google.create_documents(data)
+                                self.log.emit("Google Docs: '{}' successfully created.".format(data['title']))
+                                webbrowser.open(doc_url, new=2)
+                                row = [data['category'], data['title'], doc_url, code_url]
+                                google.insert_row(data['sheet'], row)
+                                self.recordsDone.emit([[data['sheet']] + row])
                         elif self.command == "open_sheet":
                                 webbrowser.open("https://docs.google.com/spreadsheets/d/" + self.sheetId + "/edit", new=2)
                 except errors.HttpError as e:

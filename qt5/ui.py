@@ -6,6 +6,24 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem
 
+class AddRecordUI(QDialog):
+    def __init__(self, sheets=["1","2"]):
+        super().__init__()
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'addUIVertical.ui'), self)
+        self.setWindowIcon(QtGui.QIcon(os.path.join('assets', 'icon.ico')))
+        for sheet in sheets:
+            self.topic.addItem(sheet)
+
+    def get_data(self):
+        return {
+            "title": self.title.text(),
+            "sheet": self.topic.itemData(self.topic.currentIndex(), 2),
+            "category": self.category.text(),
+            "code": self.code.toPlainText(),
+            "youtube": self.youtube.text(),
+            "quick_text": self.quick_text.toPlainText(),
+        }
+
 
 class SettingsUI(QDialog):
 

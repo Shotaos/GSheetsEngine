@@ -1,48 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>add_new_dialog</class>
- <widget class="QDialog" name="add_new_dialog">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>507</width>
-    <height>537</height>
+    <width>400</width>
+    <height>651</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Add New</string>
+   <string>Dialog</string>
   </property>
-  <layout class="QFormLayout" name="formLayout">
-   <item row="0" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
     <widget class="QLabel" name="title_label">
      <property name="text">
       <string>Title</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="1">
-    <widget class="QLineEdit" name="title_lineEdit"/>
+   <item>
+    <widget class="QLineEdit" name="title"/>
    </item>
-   <item row="1" column="0">
+   <item>
     <widget class="QLabel" name="topic_label">
      <property name="text">
       <string>Topic</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QComboBox" name="topic_comboBox"/>
+   <item>
+    <widget class="QComboBox" name="topic"/>
    </item>
-   <item row="2" column="0">
+   <item>
     <widget class="QLabel" name="category_label">
      <property name="text">
       <string>Category</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QLineEdit" name="category_lineEdit">
+   <item>
+    <widget class="QLineEdit" name="category">
      <property name="maximumSize">
       <size>
        <width>16777215</width>
@@ -51,24 +51,24 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item>
     <widget class="QLabel" name="code_label">
      <property name="text">
       <string>Code</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QTextEdit" name="code_textEdit">
+   <item>
+    <widget class="QTextEdit" name="code">
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>50</height>
+       <height>100</height>
       </size>
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
+   <item>
     <widget class="QLabel" name="youtube_label">
      <property name="text">
       <string>Youtube Reference</string>
@@ -78,18 +78,18 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
-    <widget class="QLineEdit" name="youtube_lineEdit"/>
+   <item>
+    <widget class="QLineEdit" name="youtube"/>
    </item>
-   <item row="5" column="0">
+   <item>
     <widget class="QLabel" name="quick_text_label">
      <property name="text">
       <string>QuickText</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="0" colspan="2">
-    <widget class="QTextEdit" name="quick_textArea">
+   <item>
+    <widget class="QTextEdit" name="quick_text">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -110,18 +110,51 @@
      </property>
     </widget>
    </item>
-   <item row="7" column="1">
-    <widget class="QDialogButtonBox" name="dialog_buttons">
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-     <property name="centerButtons">
-      <bool>false</bool>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

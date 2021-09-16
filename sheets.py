@@ -6,10 +6,15 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from config import GOOGLE_APP_CONFIG, TOKEN_FILE
+from docs_template import DOCS_TEMPLATE_JSON
 
 
 class GoogleSheets():
-	SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/documents']
+	SCOPES = [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/documents',
+        'https://www.googleapis.com/auth/drive'
+        ]
 	cache = None
 
 	def __init__(self, spreadsheet_id):
@@ -65,6 +70,8 @@ class GoogleSheets():
 		self.creds = creds
 		self.docs = build('docs', 'v1', credentials=creds).documents()
 		self.sheets = build('sheets', 'v4', credentials=creds).spreadsheets()
+		self.drive = build('drive', 'v3', credentials=creds)
+
 
 		if GoogleSheets.cache is None:
 			self.get_cache()
@@ -123,7 +130,8 @@ class GoogleSheets():
 
 					if re.search(query, row[1], re.IGNORECASE):
 						link = '' if len(row) < 3 else row[2]
-						result.append([sheet_name, row[0], row[1], link])
+						code_link = '' if len(row) < 4 else row[2]
+						result.append([sheet_name, row[0], row[1], link, code_link])
 					
 		return result[::-1]
 
@@ -141,6 +149,32 @@ class GoogleSheets():
 		self.get_cache()
 		return result
 		
+	def _create_code_document(self, title, code):
+		response = self.docs.create(body={"title": 'CODE: ' + title}).execute()
+		documentId = response.get('documentId')
+		requests = [{"insertText": {"location": {"index": 1}, "text": code}}]
+		self.docs.batchUpdate(documentId=documentId, body={"requests": requests}).execute()
+		return "https://docs.google.com/document/d/" + documentId + "/edit"
+
+	def _create_data_document(self, title, youtube, code, quick_text):
+		try:
+			response = self.drive.files().copy(
+					fileId='1q69hGvgkZMkpWnjd0PlKO9_PLjkSoS65geUyUuYav', body={'title': title}
+				).execute()
+			return "https://docs.google.com/document/d/" + response['documentId'] + "/edit"
+		except Exception as e:
+			print(e)
+			return "https://docs.google.com/document/d/1iyLjpLvyk34dsrazOJM7F73CzAI1vnaIVUcfpyBJ2JE/edit"
+	
+	def create_documents(self, data):
+		self.__check_creds_validity()
+
+		code_url = self._create_code_document(data['title'], data['code'])
+		doc_url = self._create_data_document(
+				data['title'],
+				data['youtube'],
+				code_url, data['quick_text'])
+		return doc_url, code_url
 
 	def get_cache(self):
 		self.__check_creds_validity()
@@ -167,12 +201,13 @@ class GoogleSheets():
 						continue
 
 					link = '' if len(row) < 3 else row[2]
-					result.append([sheet_name, row[0], row[1], link])
+					code_link = '' if len(row) < 4 else row[2]
+					result.append([sheet_name, row[0], row[1], link, code_link])
 
 		GoogleSheets.cache = result
 
 
-	def create_doc(self, name):
+	def create_doc(self, name, body):
 		self.__check_creds_validity()
 
 		response =  self.docs.create(body={'title' : name}).execute()

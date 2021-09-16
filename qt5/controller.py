@@ -2,7 +2,7 @@ import os
 import json
 from pathlib import Path
 from sheets import GoogleSheets
-from qt5.ui import alert_dialog
+from qt5.ui import alert_dialog, AddRecordUI
 from qt5.workers import GoogleServiceWorker
 from config import SETTINGS_FILE
 
@@ -77,7 +77,7 @@ class SheetsController():
         self._view.clear_table()
         if rows:
             for row in rows:
-                topic, category, title, link = row
+                topic, category, title, link, code_link = row
                 self._view.addRow([title, category, topic], link)
         self._view.stop_spinner()
 
@@ -108,12 +108,25 @@ class SheetsController():
         self.worker = GoogleServiceWorker(self.settings['sheetId'], "open_sheet")
         self.worker.start()
 
+    def handle_add_record(self):
+        topics = [s for s in self._sheets if s not in self.settings['excludeSheets']]
+        record = AddRecordUI(topics)
+        status = record.exec_()
+        if status:
+            data = record.get_data()
+            self.worker = GoogleServiceWorker(self.settings['sheetId'], "create_doc", data)
+            self.worker.log.connect(self._logger)
+            self.worker.recordsDone.connect(self._add_rows)
+            self._view.start_spinner()
+            self.worker.start()
+
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
         #self._view.add_record.clicked.connect(self._handle_add_record)
         self._view.settings_button.clicked.connect(self._open_settings_dialog)
         self._settings_view.okButton.clicked.connect(self._update_settings)
         self._view.open_sheet_button.clicked.connect(self._navigate_to_sheet)
+        self._view.add_new_button.clicked.connect(self.handle_add_record)
 
     def _logger(self, msg):
         self._view.set_log_message(msg)

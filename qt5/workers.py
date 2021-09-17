@@ -19,7 +19,7 @@ class GoogleServiceWorker(QThread):
                 self.sheetId = sheetId
 
         def run(self):
-                if self.command not in ["login", "get_sheets", "search", "insert_row", "create_doc","open_sheet", "get_copy"]:
+                if self.command not in ["login", "get_sheets", "search", "insert_row", "create_doc","open_sheet", "get_copy",  "refresh_cache"]:
                         self.log.emit("Wrong command passed to GoogleServiceWorker")
                         self.recordsDone.emit([])
                         return
@@ -39,15 +39,16 @@ class GoogleServiceWorker(QThread):
                                 self.log.emit("Query: '{}'      Found {} results.".format(self.args[0], len(result)))
                                 self.recordsDone.emit(result)
                         elif self.command == "get_copy":
+                                code = None
                                 try:
                                     code = google.get_document_text(self.args)
-                                    self.codeDone.emit(code)
                                     if code:
                                         self.log.emit("Code copied successfully")
                                     else:
                                         self.log.emit("Error copying code, check the code document")
                                 except Exception as e:
                                     self.log.emit("Error copying code: " + str(e))
+                                self.codeDone.emit(code)
 
 
                         elif self.command == "create_doc":
@@ -60,7 +61,13 @@ class GoogleServiceWorker(QThread):
                                 self.recordsDone.emit([[data['sheet']] + row])
                         elif self.command == "open_sheet":
                                 webbrowser.open("https://docs.google.com/spreadsheets/d/" + self.sheetId + "/edit", new=2)
+                        elif self.command == "refresh_cache":
+                                self.log.emit("Updating Cache!")
+                                google.get_cache()
+                                self.log.emit("Cache updated successfully!")
+                                self.recordsDone.emit([])
                 except errors.HttpError as e:
+                        print(e)
                         self.log.emit("Http error: Most likely sheetID is invalid.  " + str(e)[:40]+ '...')
                         self.recordsDone.emit([])
 

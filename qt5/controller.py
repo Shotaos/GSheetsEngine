@@ -143,6 +143,17 @@ class SheetsController():
             self._view.copy_to_clipboard(code)
         self._view.stop_spinner()
 
+    def refresh_cache(self):
+        self._view.start_spinner()
+        self.worker = GoogleServiceWorker(self.settings['sheetId'], "refresh_cache", None)
+        self.worker.log.connect(self._logger)
+        self.worker.recordsDone.connect(self.refresh_done)
+        self.worker.start()
+    
+    def refresh_done(self, def_list = []):
+        self._view.stop_spinner()
+        
+
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
         #self._view.add_record.clicked.connect(self._handle_add_record)
@@ -152,6 +163,7 @@ class SheetsController():
         self._view.add_new_button.clicked.connect(self.handle_add_record)
         self._view.filtersChanged.connect(self._update_rows)
         self._view.copy.connect(self.copy_code)
+        self._view.refresh.clicked.connect(self.refresh_cache)
 
     def _logger(self, msg):
         self._view.set_log_message(msg)

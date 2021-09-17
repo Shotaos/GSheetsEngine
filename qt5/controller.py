@@ -120,6 +120,18 @@ class SheetsController():
             self._view.start_spinner()
             self.worker.start()
 
+    def copy_code(self, url):
+        self._view.start_spinner()
+        self.worker = GoogleServiceWorker(self.settings['sheetId'], "get_copy", url)
+        self.worker.log.connect(self._logger)
+        self.worker.codeDone.connect(self.copy_code_to_clipboard)
+        self.worker.start()
+
+    def copy_code_to_clipboard(self, code):
+        if code:
+            self._view.copy_to_clipboard(code)
+        self._view.stop_spinner()
+
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
         #self._view.add_record.clicked.connect(self._handle_add_record)
@@ -127,6 +139,7 @@ class SheetsController():
         self._settings_view.okButton.clicked.connect(self._update_settings)
         self._view.open_sheet_button.clicked.connect(self._navigate_to_sheet)
         self._view.add_new_button.clicked.connect(self.handle_add_record)
+        self._view.copy.connect(self.copy_code)
 
     def _logger(self, msg):
         self._view.set_log_message(msg)

@@ -228,6 +228,8 @@ class GoogleSheets():
 		return doc_url, code_url
 
 	def get_document_text(self, url):
+		self.__check_creds_validity()
+
 		match = re.search('document/d/([^/]+)', url)
 		if not match:
 			print(f"Could not parse document url: {url}")
@@ -262,7 +264,7 @@ class GoogleSheets():
 						continue
 
 					link = '' if len(row) < 3 else row[2]
-					code_link = '' if len(row) < 4 else row[2]
+					code_link = '' if len(row) < 4 else row[3]
 					result.append([sheet_name, row[0], row[1], link, code_link])
 
 		GoogleSheets.cache = result
@@ -303,3 +305,15 @@ def read_strucutural_elements(elements):
 			toc = value.get('tableOfContents')
 			text += read_strucutural_elements(toc.get('content'))
 	return text
+
+def read_paragraph_element(element):
+    """Returns the text in the given ParagraphElement.
+
+        Args:
+            element: a ParagraphElement from a Google Doc.
+    """
+    text_run = element.get('textRun')
+    if not text_run:
+        return ''
+    return text_run.get('content')
+

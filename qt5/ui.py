@@ -1,10 +1,11 @@
 import os
+import webbrowser
 from qt5.spin import QtWaitingSpinner
 from PyQt5 import QtGui, uic
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem, QApplication
 
 class AddRecordUI(QDialog):
     def __init__(self, sheets=["1","2"]):
@@ -54,6 +55,8 @@ class SettingsUI(QDialog):
 
 class SheetsEngineUI(QMainWindow):
 
+    copy = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'mainUI.ui'), self)
@@ -94,25 +97,25 @@ class SheetsEngineUI(QMainWindow):
         i = QTableWidgetItem(str(row_values[1]))
         self.main_table.setItem(rowCount, 1, i)
 
-        #i = QTableWidgetItem(str(row_values[2]))
-        #self.main_table.setItem(rowCount, 2, i)
+        # If record has code docuemtn url
+        if row_values[2]:
+            layout = QHBoxLayout()
+            copy = QPushButton('Copy')
+            copy.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
+            copy.setStyleSheet('background-color:#585e5a; color:white')
+            copy.clicked.connect(lambda x: self.copy.emit(row_values[2]))
+            edit = QPushButton('Edit')
+            edit.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
+            edit.clicked.connect(lambda x: webbrowser.open(row_values[2], new=2))
+            layout.addStretch(1)
+            layout.setContentsMargins(10, 0, 10, 0)
+            layout.addWidget(copy)
+            layout.addWidget(edit)
 
-        layout = QHBoxLayout()
-        copy = QPushButton('Copy')
-        copy.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
-        copy.setStyleSheet('background-color:#585e5a; color:white')
-        edit = QPushButton('Edit')
-        edit.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
-        layout.addStretch(1)
-        layout.setContentsMargins(10, 0, 10, 0)
-        layout.addWidget(copy)
-        layout.addWidget(edit)
+            container = QWidget(self.main_table)
+            container.setLayout(layout)
 
-        container = QWidget(self.main_table)
-        container.setLayout(layout)
-
-        self.main_table.setCellWidget(rowCount, 2, container)
-
+            self.main_table.setCellWidget(rowCount, 2, container)
 
     def resize_table(self):
         self.main_table.resizeColumnsToContents()
@@ -173,6 +176,12 @@ class SheetsEngineUI(QMainWindow):
             self.topic_checkboxes.append(cb)
         
 
+
+    def copy_to_clipboard(self, text):
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text, QtGui.QClipboard.Clipboard)
+        if clipboard.supportsSelection():
+            clipboard.setText(text, QtGui.QClipboard.Selection)
 
     def topic_button_clicked(self, button):
         pass

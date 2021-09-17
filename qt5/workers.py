@@ -10,6 +10,7 @@ class GoogleServiceWorker(QThread):
 
         log = pyqtSignal(str)
         recordsDone = pyqtSignal(list)
+        codeDone = pyqtSignal(str)
 
         def __init__(self, sheetId, command, args=None, parent=None):
                 super(GoogleServiceWorker, self).__init__(parent)
@@ -18,7 +19,7 @@ class GoogleServiceWorker(QThread):
                 self.sheetId = sheetId
 
         def run(self):
-                if self.command not in ["login", "get_sheets", "search", "insert_row", "create_doc","open_sheet"]:
+                if self.command not in ["login", "get_sheets", "search", "insert_row", "create_doc","open_sheet", "get_copy"]:
                         self.log.emit("Wrong command passed to GoogleServiceWorker")
                         self.recordsDone.emit([])
                         return
@@ -37,8 +38,18 @@ class GoogleServiceWorker(QThread):
                                 result = google.search(*self.args)
                                 self.log.emit("Query: '{}'      Found {} results.".format(self.args[0], len(result)))
                                 self.recordsDone.emit(result)
-                        elif self.command == "insert_row":
-                                pass
+                        elif self.command == "get_copy":
+                                try:
+                                    code = google.get_document_text(self.args)
+                                    self.codeDone.emit(code)
+                                    if code:
+                                        self.log.emit("Code copied successfully")
+                                    else:
+                                        self.log.emit("Error copying code, check the code document")
+                                except Exception as e:
+                                    self.log.emit("Error copying code: " + str(e))
+
+
                         elif self.command == "create_doc":
                                 data = self.args
                                 doc_url, code_url = google.create_documents(data)

@@ -15,6 +15,7 @@ class SheetsController():
         self._view.add_table_columns(['Title', 'Cateogry', 'Code'])
         # Connect signals and slots
         self._connectSignals()
+        self.data = None
 
     def _init_settings(self):
         if os.path.isfile(SETTINGS_FILE):
@@ -66,19 +67,29 @@ class SheetsController():
 
         if query:
             self._view.start_spinner()
-            topics = self._view.get_checked_topics()
-            topics = topics if topics != [] else [s for s in self._sheets if s not in self.settings['excludeSheets']]
+            #topics = self._view.get_checked_topics()
+            #topics = topics if topics != [] else [s for s in self._sheets if s not in self.settings['excludeSheets']]
+            topics = [s for s in self._sheets if s not in self.settings['excludeSheets']]
             self.worker = GoogleServiceWorker(self.settings['sheetId'], "search", (query, topics))
             self.worker.log.connect(self._logger)
             self.worker.recordsDone.connect(self._add_rows)
             self.worker.start()
 
     def _add_rows(self, rows):
+        self.data = rows
+        self._update_rows()
+
+    def _update_rows(self):
+
         self._view.clear_table()
-        if rows:
-            for row in rows:
+        current_topics = [_.lower() for _ in self._view.get_checked_topics()]
+
+        if self.data:
+            for row in self.data:
                 topic, category, title, link, code_link = row
-                self._view.addRow([title, category, code_link], link)
+                category = f'[{topic}] ' + category
+                if current_topics == [] or topic.lower() in current_topics:
+                    self._view.addRow([title, category, code_link], link)
         self._view.stop_spinner()
 
         
@@ -139,6 +150,7 @@ class SheetsController():
         self._settings_view.okButton.clicked.connect(self._update_settings)
         self._view.open_sheet_button.clicked.connect(self._navigate_to_sheet)
         self._view.add_new_button.clicked.connect(self.handle_add_record)
+        self._view.filtersChanged.connect(self._update_rows)
         self._view.copy.connect(self.copy_code)
 
     def _logger(self, msg):

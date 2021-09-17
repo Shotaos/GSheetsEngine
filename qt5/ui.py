@@ -56,6 +56,7 @@ class SettingsUI(QDialog):
 class SheetsEngineUI(QMainWindow):
 
     copy = pyqtSignal(str)
+    filtersChanged = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -184,7 +185,7 @@ class SheetsEngineUI(QMainWindow):
             clipboard.setText(text, QtGui.QClipboard.Selection)
 
     def topic_button_clicked(self, button):
-        pass
+        self.filtersChanged.emit()
 
     def get_checked_topics(self):
         topics_chosen = []

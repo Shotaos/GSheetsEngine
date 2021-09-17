@@ -157,14 +157,65 @@ class GoogleSheets():
 		return "https://docs.google.com/document/d/" + documentId + "/edit"
 
 	def _create_data_document(self, title, youtube, code, quick_text):
-		try:
-			response = self.drive.files().copy(
-					fileId='1q69hGvgkZMkpWnjd0PlKO9_PLjkSoS65geUyUuYav', body={'title': title}
-				).execute()
-			return "https://docs.google.com/document/d/" + response['documentId'] + "/edit"
-		except Exception as e:
-			print(e)
-			return "https://docs.google.com/document/d/1iyLjpLvyk34dsrazOJM7F73CzAI1vnaIVUcfpyBJ2JE/edit"
+		response = self.drive.files().copy(
+				fileId='1q69hGvgkZMkpWnjd0PlKO9_PLjkSoS65geUyUuYav-w', body={'title': title}
+			).execute()
+
+        # patch the text parts
+		requests = [
+            {
+                "updateTextStyle": {
+                "textStyle": {
+                    "link": {
+                        "url": youtube
+                    }
+                },
+                "range": {
+                    "startIndex": 12,
+                    "endIndex": 24
+                },
+                "fields": "link"
+                }
+            },
+            {
+                "updateTextStyle": {
+                "textStyle": {
+                    "link": {
+                        "url": code
+                    }
+                },
+                "range": {
+                    "startIndex": 26,
+                    "endIndex": 35
+                },
+                "fields": "link"
+                }
+            },
+			{
+				'replaceAllText': {
+				'containsText': {
+					'text': '{{title}}',
+					'matchCase':  'true'
+				},
+				'replaceText': title,
+				}
+            }, 
+            {
+				'replaceAllText': {
+				'containsText': {
+					'text': '{{quick_text}}',
+					'matchCase':  'true'
+				},
+				'replaceText': quick_text,
+				}
+			},
+		]
+
+		result = self.docs.batchUpdate(
+			documentId=response['id'], body={'requests': requests}).execute()
+
+
+		return "https://docs.google.com/document/d/" + response['id'] + "/edit"
 	
 	def create_documents(self, data):
 		self.__check_creds_validity()
@@ -175,6 +226,16 @@ class GoogleSheets():
 				data['youtube'],
 				code_url, data['quick_text'])
 		return doc_url, code_url
+
+	def get_document_text(self, url):
+		match = re.search('document/d/([^/]+)', url)
+		if not match:
+			print(f"Could not parse document url: {url}")
+			return
+
+		id_ = match.group(1)
+		doc = self.docs.get(documentId=id_).execute()
+		return read_strucutural_elements(doc.get('body').get('content'))
 
 	def get_cache(self):
 		self.__check_creds_validity()
@@ -207,8 +268,38 @@ class GoogleSheets():
 		GoogleSheets.cache = result
 
 
+
 	def create_doc(self, name, body):
 		self.__check_creds_validity()
 
 		response =  self.docs.create(body={'title' : name}).execute()
 		return "https://docs.google.com/document/d/" + response['documentId'] + "/edit"
+
+# helper functions
+
+def read_strucutural_elements(elements):
+	"""Recurses through a list of Structural Elements to read a document's text where text may be
+		in nested elements.
+
+		Args:
+			elements: a list of Structural Elements.
+	"""
+	text = ''
+	for value in elements:
+		if 'paragraph' in value:
+			elements = value.get('paragraph').get('elements')
+			for elem in elements:
+				text += read_paragraph_element(elem)
+		elif 'table' in value:
+			# The text in table cells are in nested Structural Elements and tables may be
+			# nested.
+			table = value.get('table')
+			for row in table.get('tableRows'):
+				cells = row.get('tableCells')
+				for cell in cells:
+					text += read_strucutural_elements(cell.get('content'))
+		elif 'tableOfContents' in value:
+			# The text in the TOC is also in a Structural Element.
+			toc = value.get('tableOfContents')
+			text += read_strucutural_elements(toc.get('content'))
+	return text

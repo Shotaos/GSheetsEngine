@@ -12,7 +12,7 @@ class SheetsController():
         self._settings_view = settings
         self._init_settings()
         self._check_login()
-        self._view.add_table_columns(['Title', 'Cateogry', 'Topic'])
+        self._view.add_table_columns(['Title', 'Cateogry', 'Code'])
         # Connect signals and slots
         self._connectSignals()
 
@@ -78,7 +78,7 @@ class SheetsController():
         if rows:
             for row in rows:
                 topic, category, title, link, code_link = row
-                self._view.addRow([title, category, topic], link)
+                self._view.addRow([title, category, code_link], link)
         self._view.stop_spinner()
 
         

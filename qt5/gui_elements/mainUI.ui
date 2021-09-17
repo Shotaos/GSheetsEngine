@@ -62,6 +62,13 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="refresh">
+        <property name="text">
+         <string>Refresh Cache</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="open_sheet_button">
         <property name="text">
          <string>Open sheet</string>
@@ -221,22 +228,6 @@
               <string>Add New</string>
              </property>
             </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Maximum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>50</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>

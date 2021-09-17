@@ -3,7 +3,7 @@ from qt5.spin import QtWaitingSpinner
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView
+from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem
 
 class AddRecordUI(QDialog):
@@ -61,7 +61,7 @@ class SheetsEngineUI(QMainWindow):
         self.show()
         self.search_line_input.returnPressed.connect(self.search_button.click)
         self.spinner = QtWaitingSpinner(self, True, True, Qt.ApplicationModal)
-        self.main_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        #self.main_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.filter_btns_layout.addStretch(1)
 
     def start_spinner(self):
@@ -76,6 +76,9 @@ class SheetsEngineUI(QMainWindow):
     def add_table_columns(self, columns):
         self.main_table.setColumnCount(len(columns))
         self.main_table.setHorizontalHeaderLabels(columns)
+        self.main_table.horizontalHeader().setMinimumSectionSize(200)
+        self.main_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.main_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
 
     def addRow(self, row_values, link):
         rowCount = self.main_table.rowCount()
@@ -88,9 +91,28 @@ class SheetsEngineUI(QMainWindow):
         q.setText('<a href="{}">{}</a>'.format(link, row_values[0]))
         self.main_table.setCellWidget(rowCount, 0, q)
 
-        for col in range(1, columnCount):
-            i = QTableWidgetItem(str(row_values[col]))
-            self.main_table.setItem(rowCount, col, i)
+        i = QTableWidgetItem(str(row_values[1]))
+        self.main_table.setItem(rowCount, 1, i)
+
+        #i = QTableWidgetItem(str(row_values[2]))
+        #self.main_table.setItem(rowCount, 2, i)
+
+        layout = QHBoxLayout()
+        copy = QPushButton('Copy')
+        copy.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
+        copy.setStyleSheet('background-color:#585e5a; color:white')
+        edit = QPushButton('Edit')
+        edit.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
+        layout.addStretch(1)
+        layout.setContentsMargins(10, 0, 10, 0)
+        layout.addWidget(copy)
+        layout.addWidget(edit)
+
+        container = QWidget(self.main_table)
+        container.setLayout(layout)
+
+        self.main_table.setCellWidget(rowCount, 2, container)
+
 
     def resize_table(self):
         self.main_table.resizeColumnsToContents()

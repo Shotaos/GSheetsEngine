@@ -149,11 +149,13 @@ class GoogleSheets():
 		return result
 		
 	def _create_code_document(self, title, code):
-		response = self.docs.create(body={"title": 'CODE: ' + title}).execute()
-		documentId = response.get('documentId')
-		requests = [{"insertText": {"location": {"index": 1}, "text": code}}]
-		self.docs.batchUpdate(documentId=documentId, body={"requests": requests}).execute()
-		return "https://docs.google.com/document/d/" + documentId + "/edit"
+		if code:
+			response = self.docs.create(body={"title": 'CODE: ' + title}).execute()
+			documentId = response.get('documentId')
+			requests = [{"insertText": {"location": {"index": 1}, "text": code}}]
+			self.docs.batchUpdate(documentId=documentId, body={"requests": requests}).execute()
+			return "https://docs.google.com/document/d/" + documentId + "/edit"
+		return
 
 	def _create_data_document(self, title, youtube, code, quick_text):
 		response = self.drive.files().copy(
@@ -162,41 +164,41 @@ class GoogleSheets():
 
         # patch the text parts
 		requests = [
-            {
-                "updateTextStyle": {
-                "textStyle": {
-                    "link": {
-                        "url": youtube
-                    }
-                },
-                "range": {
-                    "startIndex": 12,
-                    "endIndex": 24
-                },
-                "fields": "link"
-                }
-            },
-            {
-                "updateTextStyle": {
-                "textStyle": {
-                    "link": {
-                        "url": code
-                    }
-                },
-                "range": {
-                    "startIndex": 26,
-                    "endIndex": 35
-                },
-                "fields": "link"
-                }
-            },
+			{
+				"updateTextStyle": {
+				"textStyle": {
+					"link": {
+						"url": youtube if youtube else 'https://youtube.com'
+					}
+				},
+				"range": {
+					"startIndex": 12,
+					"endIndex": 24
+				},
+				"fields": "link"
+				}
+			},
+			{
+				"updateTextStyle": {
+				"textStyle": {
+					"link": {
+						"url": code if code else ' '
+					}
+				},
+				"range": {
+					"startIndex": 26,
+					"endIndex": 35
+				},
+				"fields": "link"
+				}
+			},
 			{
 				'replaceAllText': {
 				'containsText': {
 					'text': '{{title}}',
 					'matchCase':  'true'
 				},
-				'replaceText': title,
+				'replaceText': title if title else ' ',
 				}
             }, 
             {
@@ -205,10 +207,33 @@ class GoogleSheets():
 					'text': '{{quick_text}}',
 					'matchCase':  'true'
 				},
-				'replaceText': quick_text,
+				'replaceText': quick_text if quick_text else ' ',
 				}
 			},
 		]
+
+		if not youtube:
+			requests.append({
+				'replaceAllText': {
+				'containsText': {
+					'text': '[Youtube link]',
+					'matchCase':  'true'
+				},
+				'replaceText': ' ',
+				}
+			})
+
+		if not code:
+			requests.append({
+				'replaceAllText': {
+				'containsText': {
+					'text': '[Code link]',
+					'matchCase':  'true'
+				},
+				'replaceText': ' ',
+				}
+			})
+
 
 		result = self.docs.batchUpdate(
 			documentId=response['id'], body={'requests': requests}).execute()

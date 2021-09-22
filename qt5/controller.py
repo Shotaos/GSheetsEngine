@@ -4,7 +4,7 @@ from pathlib import Path
 from sheets import GoogleSheets
 from qt5.ui import alert_dialog, AddRecordUI
 from qt5.workers import GoogleServiceWorker
-from config import SETTINGS_FILE
+from config import SETTINGS_FILE, TOPICS_FILE
 
 class SheetsController():
     def __init__(self, view, settings):
@@ -84,6 +84,11 @@ class SheetsController():
         self._view.clear_table()
         current_topics = [_.lower() for _ in self._view.get_checked_topics()]
 
+        open(TOPICS_FILE, 'w').write(json.dumps(current_topics, indent=4))
+
+        self._settings_view.set_setting('activeTopics', current_topics)
+        self._save_settings()
+
         if self.data:
             for row in self.data:
                 topic, category, title, link, code_link = row
@@ -96,7 +101,13 @@ class SheetsController():
     def _init_topics(self, sheets):
         self._sheets = sheets
         filtered_sheets = [sheet for sheet in sheets if sheet not in self.settings['excludeSheets']]
-        self._view.add_topic_buttons(filtered_sheets)
+
+        try:
+            active_topics = json.loads(open(TOPICS_FILE, 'r').read())
+        except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
+            active_topics = []
+
+        self._view.add_topic_buttons(filtered_sheets, active_topics)
         self._settings_view.set_settings(self.settings, sheets)
         #self._view.populate_topic_dropdowns(filtered_sheets)
         self._view.stop_spinner()

@@ -8,3 +8,4 @@ SETTINGS_DIR.mkdir(exist_ok=True)
 SETTINGS_FILE = SETTINGS_DIR / 'sheetsettings.json'
 CACHED_FILE = SETTINGS_DIR / 'data.cache'
 TOKEN_FILE = SETTINGS_DIR / 'token.json'
+TOPICS_FILE = SETTINGS_DIR / 'topics.json'

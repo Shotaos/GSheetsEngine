@@ -31,6 +31,7 @@ class SettingsUI(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'settUI.ui'), self)
+        self.settings = {}
 
     def _add_topic_checkboxes(self, topics, excluded):
         self.sheets = []
@@ -41,6 +42,9 @@ class SettingsUI(QDialog):
             self.exclude_sheets.addWidget(cb, *positions[i])
             self.sheets.append(cb)
 
+    def set_setting(self, key, value):
+        self.settings[key] = value
+
     def set_settings(self, settings, sheets):
         self.sheetId.setText(settings['sheetId'])
         self._add_topic_checkboxes(sheets, settings['excludeSheets'])
@@ -50,7 +54,7 @@ class SettingsUI(QDialog):
         for cb in self.sheets:
             if cb.isChecked():
                 topics_excluded.append(cb.text())
-        return {'sheetId': self.sheetId.text(), 'excludeSheets': topics_excluded}
+        return {'sheetId': self.sheetId.text(), 'excludeSheets': topics_excluded, **self.settings}
 
 
 class SheetsEngineUI(QMainWindow):
@@ -92,7 +96,12 @@ class SheetsEngineUI(QMainWindow):
         # Insert first column
         q = QLabel(self)
         q.setOpenExternalLinks(True)
-        q.setText('<a href="{}">{}</a>'.format(link, row_values[0]))
+
+        if link:
+            q.setText('<a href="{}">{}</a>'.format(link, row_values[0]))
+        else:
+            q.setText(row_values[0])
+
         self.main_table.setCellWidget(rowCount, 0, q)
 
         i = QTableWidgetItem(str(row_values[1]))
@@ -163,16 +172,17 @@ class SheetsEngineUI(QMainWindow):
                 # remove it from the gui
                 widgetToRemove.setParent(None)
 
-    def add_topic_buttons(self, topics):
+    def add_topic_buttons(self, topics, active_topics):
         self.topic_checkboxes = []
         layout = self.filter_btns_layout
         self.clear_layout(layout)
         for topic in topics:
             cb = QPushButton(text=topic.capitalize())
-            cb.setCheckable(True)
             cb.clicked.connect(lambda : self.topic_button_clicked(cb))
             cb.setStyleSheet("min-width:150px")
             cb.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
+            cb.setCheckable(True)
+            cb.setChecked(topic.lower() in active_topics)
             layout.insertWidget(layout.count() - 1, cb)
             self.topic_checkboxes.append(cb)
         

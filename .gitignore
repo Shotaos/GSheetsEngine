@@ -131,3 +131,5 @@ dmypy.json
 gsheetsengine.code-workspace
 credentials.json
 token.json
+
+*.swp

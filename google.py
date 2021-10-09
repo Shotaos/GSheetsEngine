@@ -1,106 +1,253 @@
 import os.path
 import re
+import functools
+from collections import deque
 from pathlib import Path
+import io
+import os
+import backoff
+import pathlib
+import googleapiclient
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.http import MediaIoBaseDownload
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from config import GOOGLE_APP_CONFIG, TOKEN_FILE
 
+def check_creds(func):
+	@functools.wraps(func)
+	def wrap(self, *args, **kwargs):
+		if not self.creds or not self.creds.valid:
+			self.authenticate()
+		return func(self, *args, **kwargs)
+	return wrap
 
-class GoogleSheets():
+class GoogleService:
 	SCOPES = [
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/documents',
         'https://www.googleapis.com/auth/drive'
         ]
-	cache = None
 
-	def __init__(self, spreadsheet_id):
-		self.spreadsheet_id = spreadsheet_id
+	def __init__(self):
 		self.creds = None
 
-	def check_credentials(self):
+
+	def authenticate(self):
 		if os.path.exists(TOKEN_FILE):
-		    creds = Credentials.from_authorized_user_file(TOKEN_FILE, self.SCOPES)
+			self.creds = Credentials.from_authorized_user_file(TOKEN_FILE, self.SCOPES)
 		else:
-			return False
+			raise PermissionError(f'Google Authorized user file does not exist: {TOKEN_FILE}')
 
 		# If there are no (valid) credentials available, let the user log in.
-		if not creds or not creds.valid:
-			if creds and creds.expired and creds.refresh_token:
-				creds.refresh(Request())
-
-				# Check validity after refresh
-				if not creds.valid:
-					return False
-			else:
-				return False
-		return True
-
-	def login(self):
-		self.__init_service()
-	
-	def __check_creds_validity(self):
 		if not self.creds or not self.creds.valid:
-			self.__init_service()
+			if self.creds and self.creds.expired and self.creds.refresh_token:
+				self.creds.refresh(Request())
 
-	def __init_service(self):
-		creds = None
-		# The file token.json stores the user's access and refresh tokens, and is
-		# created automatically when the authorization flow completes for the first
-		# time.
-		if os.path.exists(TOKEN_FILE):
-		    creds = Credentials.from_authorized_user_file(TOKEN_FILE, self.SCOPES)
+				if not self.creds.valid:
+					raise PermissionError(f'Credentials are invalid after refresh')
+			else:
+				flow = InstalledAppFlow.from_client_config(
+				GOOGLE_APP_CONFIG, self.SCOPES)
+				self.creds = flow.run_local_server(port=4338)
 
-		# If there are no (valid) credentials available, let the user log in.
-		if not creds or not creds.valid:
-		    if creds and creds.expired and creds.refresh_token:
-			    creds.refresh(Request())
-		    else:
-			    flow = InstalledAppFlow.from_client_config(
-			    GOOGLE_APP_CONFIG, self.SCOPES)
-			    creds = flow.run_local_server(port=4338)
+			# Save the credentials for the next run
+			with open(TOKEN_FILE, 'w') as token:
+				token.write(self.creds.to_json())
 
-		    # Save the credentials for the next run
-		    with open(TOKEN_FILE, 'w') as token:
-			    token.write(creds.to_json())
+		self.docs = build('docs', 'v1', credentials=self.creds).documents()
+		self.sheets = build('sheets', 'v4', credentials=self.creds).spreadsheets()
+		self.drive = build('drive', 'v3', credentials=self.creds)
 
-		self.creds = creds
-		self.docs = build('docs', 'v1', credentials=creds).documents()
-		self.sheets = build('sheets', 'v4', credentials=creds).spreadsheets()
-		self.drive = build('drive', 'v3', credentials=creds)
+	@check_creds
+	def insert_row(self, sheet, row):
 
+		body = {'majorDimension': 'ROWS',
+			'values': [row]}
+		request = self.sheets.values().append(spreadsheetId=self.spreadsheet_id,
+							valueInputOption="RAW",
+							range=sheet + '!A:C',
+							body=body)
+		result = request.execute()
+		# Update cache
+		self.get_cache()
+		return result
 
-		if GoogleSheets.cache is None:
-			self.get_cache()
-
+	@check_creds
 	def get_sheet_info(self):
-		self.__check_creds_validity()
-
-		response = self.sheets.get(spreadsheetId=self.spreadsheet_id, fields='sheets/properties').execute()
+		response = self.sheets.get(
+				spreadsheetId=self.spreadsheet_id, fields='sheets/properties').execute()
 		return [sheet['properties'] for sheet in response['sheets']]
 
 	def get_sheet_names(self):
-		self.__check_creds_validity()
-
 		sheets = self.get_sheet_info()
 		return [sheet['title'] for sheet in sheets]
 
-	def get_sheet_data(self, sheet):
-		self.__check_creds_validity()
-
-		values = self.sheets.values().get(spreadsheetId=self.spreadsheet_id, range=sheet + '!A:C').execute()
+	@check_creds
+	def get_sheet_data(self, sheet, _range):
+		values = self.sheets.values().get(
+				spreadsheetId=self.spreadsheet_id, range=sheet + '!' + _range).execute()
 		return values['values'][1:]
 
+	@check_creds
+	def create_doc(self, name, body):
+		response =  self.docs.create(body={'title' : name}).execute()
+		return "https://docs.google.com/document/d/" + response['documentId'] + "/edit"
+
+	@check_creds
+	def create_folder(self, parent_id, name):
+
+		file_metadata = {
+			'name': name,
+			'mimeType': 'application/vnd.google-apps.folder',
+			'parents': [parent_id]
+		}
+
+		folder = self.drive.files().create(
+				body=file_metadata, fields='id').execute()
+
+		return folder['id']
+
+	@backoff.on_exception(backoff.expo,
+						  googleapiclient.errors.Error,
+						  max_tries=4)
+	def drive_download_file(self, file_id, local_path):
+
+		request = self.drive.files().get_media(fileId=file_id)
+
+		fh = io.FileIO(local_path, mode='wb')
+		downloader = MediaIoBaseDownload(fh, request)
+		done = False
+
+		while done is False:
+			status, done = downloader.next_chunk()
+		return local_path
+
+	def drive_get_folder_contents(self, folder_id):
+
+		q = f"parents = '{folder_id}'"
+
+		page_token = None
+
+		while True:
+			response = self.drive.files().list(
+				q=q, spaces='drive', fields='nextPageToken, files(id, name, md5Checksum, mimeType)', pageToken=page_token).execute()
+
+			for f in response['files']:
+				yield f
+
+			page_token = response.get('nextPageToken')
+
+			if page_token is None:
+				break
+
+	@check_creds
+	def drive_upload_file(self, parent_id, path):
+
+		file_metadata = {
+			'name': os.path.basename(path),
+			'parents': [parent_id]
+		}
+
+		path = os.path.join(path)
+		media = googleapiclient.http.MediaFileUpload(path)
+
+		try:
+			return self.drive.files().create(
+				body=file_metadata, media_body=media, fields='id').execute()
+		except TimeoutError as e:
+			print(e)
+
+	@check_creds
+	def traverse_drive_recursively(self, folder_id, path):
+
+		root = {
+				'id': folder_id,
+				'mimeType': 'application/vnd.google-apps.folder',
+				'name': '',
+				'path': pathlib.Path(path),
+		}
+
+		queue = deque([root])
+
+		while queue:
+			folder = queue.pop()
+			pathlib.Path(folder['path']).mkdir(parents=True, exist_ok=True)
+
+			for _file in self.drive_get_folder_contents(folder['id']):
+
+				_file['path'] = folder['path'] / _file['name']
+
+				if _file['mimeType'] == 'application/vnd.google-apps.folder':
+					queue.append(_file)
+
+				elif 'application/vnd.google-apps' not in _file['mimeType']:
+
+					self.drive_download_file(_file['id'], _file['path'])
 	
+
+	@check_creds
+	def upload_folder(self, path_to_folder, parent_id):
+		root_name = os.path.basename(path_to_folder)
+		root_id = self.create_folder(parent_id, root_name)
+
+		cache = {}
+		cache[path_to_folder] = root_id
+
+		for root, dirs, files in os.walk(path_to_folder, topdown=True):
+			parent_dir_id = cache[root]
+
+			for _file in files:
+				print("Uploading file: ", _file)
+				self.drive_upload_file(parent_dir_id, os.path.join(root, _file))
+
+			for directory in dirs:
+				print("Uploading Folder: ", directory)
+				_id = self.create_folder(parent_dir_id, directory)
+				cache[os.path.join(root, directory)] = _id
+
+
+class UnrealService(GoogleService):
+	def __init__(self, spreadsheet_id):
+		super().__init__()
+		self.spreadsheet_id = spreadsheet_id
+		self.cache = None
+
+	def authenticate(self):
+		super().authenticate()
+		if self.cache is None:
+			self.get_cache()
+
+	def get_cache(self):
+		sheets = self.get_sheet_names()
+		if not sheets:
+			raise ValueError(f"Could not retrive sheet names from Sprreadsheet: {self.spreadsheet_id}")
+
+		sheet = sheets[0]
+		self.cache = self.get_sheet_data(sheet, 'A:F')
+
+
+class NotesService(GoogleService):
+
+	def __init__(self, spreadsheet_id):
+		super().__init__()
+		self.spreadsheet_id = spreadsheet_id
+		self.cache = None
+
+	def authenticate(self):
+		super().authenticate()
+		if self.cache is None:
+			self.get_cache()
+
+
+	@check_creds
 	def search(self, query, sheets=[]):
-		self.__check_creds_validity()
 
 		result = []
 
-		if GoogleSheets.cache is not None:
-			for row in GoogleSheets.cache:
+		if self.cache is not None:
+			for row in self.cache:
 				if not sheets or row[0].lower() in [_.lower() for _ in sheets]:
 					if re.search(query, row[2], re.IGNORECASE):
 						result.append(row)
@@ -134,20 +281,8 @@ class GoogleSheets():
 					
 		return result[::-1]
 
-	def insert_row(self, sheet, row):
-		self.__check_creds_validity()
-
-		body = {'majorDimension': 'ROWS',
-			'values': [row]}
-		request = self.sheets.values().append(spreadsheetId=self.spreadsheet_id,
-							valueInputOption="RAW",
-							range=sheet + '!A:C',
-							body=body)
-		result = request.execute()
-		# Update cache
-		self.get_cache()
-		return result
 		
+	@check_creds
 	def _create_code_document(self, title, code):
 		if code:
 			response = self.docs.create(body={"title": 'CODE: ' + title}).execute()
@@ -157,9 +292,10 @@ class GoogleSheets():
 			return "https://docs.google.com/document/d/" + documentId + "/edit"
 		return
 
+	@check_creds
 	def _create_data_document(self, title, youtube, code, quick_text):
 		response = self.drive.files().copy(
-				fileId='1q69hGvgkZMkpWnjd0PlKO9_PLjkSoS65geUyUuYav-w', body={'title': title}
+				fileId='1q69hGvgkZMkpWnjd0PlKO9_PLjkSoS65geUyUuYav-w', body={'name': title}
 			).execute()
 
         # patch the text parts
@@ -242,7 +378,6 @@ class GoogleSheets():
 		return "https://docs.google.com/document/d/" + response['id'] + "/edit"
 	
 	def create_documents(self, data):
-		self.__check_creds_validity()
 
 		code_url = self._create_code_document(data['title'], data['code'])
 		doc_url = self._create_data_document(
@@ -251,8 +386,8 @@ class GoogleSheets():
 				code_url, data['quick_text'])
 		return doc_url, code_url
 
+	@check_creds
 	def get_document_text(self, url):
-		self.__check_creds_validity()
 
 		match = re.search('document/d/([^/]+)', url)
 		if not match:
@@ -263,8 +398,8 @@ class GoogleSheets():
 		doc = self.docs.get(documentId=id_).execute()
 		return read_strucutural_elements(doc.get('body').get('content'))
 
+	@check_creds
 	def get_cache(self):
-		self.__check_creds_validity()
 
 		result = []
 		# Get sheet names
@@ -291,15 +426,11 @@ class GoogleSheets():
 					code_link = '' if len(row) < 4 else row[3]
 					result.append([sheet_name, row[0], row[1], link, code_link])
 
-		GoogleSheets.cache = result
+		self.cache = result
 
 
 
-	def create_doc(self, name, body):
-		self.__check_creds_validity()
 
-		response =  self.docs.create(body={'title' : name}).execute()
-		return "https://docs.google.com/document/d/" + response['documentId'] + "/edit"
 
 # helper functions
 

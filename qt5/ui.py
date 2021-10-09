@@ -1,5 +1,7 @@
 import os
 import webbrowser
+import queue
+from qt5.workers import AssetThumbnailWorker
 from qt5.spin import QtWaitingSpinner
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -26,6 +28,41 @@ class AddRecordUI(QDialog):
         }
 
 
+class AssetResults(QDialog):
+    def __init__(self, assets, parent=None):
+        super().__init__(parent)
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'assetResultsDialog.ui'), self)
+        self.assets = assets
+        self.widgets = []
+        self.threads = []
+        q = queue.Queue()
+
+        layout = self.results_layout.layout()
+
+        for k, thumbnail in enumerate(assets):
+            asset = AssetResultWidget()
+            self.widgets.append(asset)
+            q.put((k, thumbnail))
+            layout.addWidget(asset, k // 4, k % 4)
+
+        for i in range(10):
+            thread = AssetThumbnailWorker(q)
+            thread.resultReady.connect(self.updateThumbnail)
+            thread.start()
+            self.threads.append(thread)
+
+
+    def updateThumbnail(self, _data):
+        index, data = _data
+        image = QtGui.QImage()
+        image.loadFromData(data)
+        self.widgets[index].thumbnail.setPixmap(QtGui.QPixmap(image).scaled(100, 100, Qt.KeepAspectRatio))
+
+class AssetResultWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'assetResultWidget.ui'), self)
+        
 class SettingsUI(QDialog):
 
     def __init__(self, parent):

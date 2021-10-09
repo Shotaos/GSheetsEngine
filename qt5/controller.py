@@ -1,8 +1,8 @@
 import os
 import json
 from pathlib import Path
-from sheets import GoogleSheets
-from qt5.ui import alert_dialog, AddRecordUI
+from gsuite import NotesService
+from qt5.ui import alert_dialog, AddRecordUI, AssetResults
 from qt5.workers import GoogleServiceWorker
 from config import SETTINGS_FILE, TOPICS_FILE
 
@@ -45,15 +45,9 @@ class SheetsController():
     def _check_login(self):
         self._view.start_spinner()
 
-        gservice = GoogleSheets(self.settings['sheetId'])
-        if not gservice.check_credentials():
-            alert_dialog()
-            self.login_worker = GoogleServiceWorker(self.settings['sheetId'], "login")
-            self.login_worker.log.connect(self._logger)
-            self.login_worker.recordsDone.connect(self._activate_startup)
-            self.login_worker.start()
-        else:
-            self._activate_startup()
+        service = NotesService(self.settings['sheetId'])
+        service.authenticate()
+        self._activate_startup()
 
     def _activate_startup(self, arg=None):
         self._view.start_spinner()
@@ -164,6 +158,11 @@ class SheetsController():
     def refresh_done(self, def_list = []):
         self._view.stop_spinner()
         
+    def handle_search_asset(self):
+        assets = ['1GTsAFl6IOPSAOXHjEZ5ifGXE0pRhRbAu'] * 10
+        assets = AssetResults(assets, self._view)
+        status = assets.exec_()
+
 
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
@@ -172,6 +171,7 @@ class SheetsController():
         self._settings_view.okButton.clicked.connect(self._update_settings)
         self._view.open_sheet_button.clicked.connect(self._navigate_to_sheet)
         self._view.add_new_button.clicked.connect(self.handle_add_record)
+        self._view.search_asset.clicked.connect(self.handle_search_asset)
         self._view.filtersChanged.connect(self._update_rows)
         self._view.copy.connect(self.copy_code)
         self._view.refresh.clicked.connect(self.refresh_cache)

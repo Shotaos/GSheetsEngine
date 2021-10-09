@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>771</width>
+    <width>1042</width>
     <height>594</height>
    </rect>
   </property>
@@ -122,6 +122,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>240</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>
@@ -149,6 +155,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>120</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>
@@ -157,11 +169,16 @@
          </property>
          <property name="font">
           <font>
-           <pointsize>10</pointsize>
+           <pointsize>11</pointsize>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="text">
-          <string>Search</string>
+          <string>Search Notes</string>
          </property>
         </widget>
        </item>
@@ -192,11 +209,34 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>463</width>
+            <width>628</width>
             <height>60</height>
            </rect>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QPushButton" name="search_asset">
+             <property name="minimumSize">
+              <size>
+               <width>120</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string>Search Assets</string>
+             </property>
+            </widget>
+           </item>
            <item>
             <spacer name="horizontalSpacer_3">
              <property name="orientation">
@@ -225,7 +265,20 @@
               </size>
              </property>
              <property name="text">
-              <string>Add New</string>
+              <string>Add Note</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="add_asset">
+             <property name="minimumSize">
+              <size>
+               <width>150</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Add Asset</string>
              </property>
             </widget>
            </item>
@@ -320,7 +373,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>753</width>
+         <width>1024</width>
          <height>60</height>
         </rect>
        </property>

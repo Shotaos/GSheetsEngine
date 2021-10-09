@@ -39,11 +39,18 @@ class AssetResults(QDialog):
 
         layout = self.results_layout.layout()
 
-        for k, thumbnail in enumerate(assets):
+        for k, _data in enumerate(assets):
+            name = _data[2]
+            version = _data[1]
+            thumbnail = _data[4]
             asset = AssetResultWidget()
+            asset.name.setText(name)
+            asset.ue_version.setText(version)
+            asset.setObjectName('asset_result')
             self.widgets.append(asset)
             q.put((k, thumbnail))
             layout.addWidget(asset, k // 4, k % 4)
+
 
         for i in range(10):
             thread = AssetThumbnailWorker(q)
@@ -56,12 +63,19 @@ class AssetResults(QDialog):
         index, data = _data
         image = QtGui.QImage()
         image.loadFromData(data)
-        self.widgets[index].thumbnail.setPixmap(QtGui.QPixmap(image).scaled(100, 100, Qt.KeepAspectRatio))
+        self.widgets[index].thumbnail.setPixmap(QtGui.QPixmap(image).scaled(150, 150, Qt.KeepAspectRatio))
+
 
 class AssetResultWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'assetResultWidget.ui'), self)
+
+    def enterEvent(self, event):
+        self.setStyleSheet('#name{font-weight:bold;}')
+
+    def leaveEvent(self, event):
+        self.setStyleSheet('#name{font-weight:normal;}')
         
 class SettingsUI(QDialog):
 

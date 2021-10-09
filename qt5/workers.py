@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 from googleapiclient import errors
-from gsuite import NotesService
+from gsuite import NotesService, UnrealService
 import socket
 import urllib
 import queue
@@ -21,8 +21,8 @@ class AssetThumbnailWorker(QThread):
                     index, _id = self.queue.get(block=False)
                     data = urllib.request.urlopen(f"https://drive.google.com/uc?export=view&id={_id}").read()
                     self.resultReady.emit((index, data))
-                except queue.Empty:
-                    pass
+                except (queue.Empty, urllib.error.HTTPError) as e:
+                    print(e)
 
 
 class GoogleServiceWorker(QThread):
@@ -40,24 +40,29 @@ class GoogleServiceWorker(QThread):
 
         def run(self):
             try:
-                google = NotesService(self.sheetId)
+                notes = NotesService(self.sheetId)
+                unreal = UnrealService(self.sheetId)
 
-                if self.command == "login":
-                    google.login()
+                if self.command == "search_assets":
+                    result = unreal.search(*self.args)
+                    self.log.emit("Query: '{}'      Found {} results.".format(self.args[0], len(result)))
+                    self.recordsDone.emit(result)
+                elif self.command == "login":
+                    notes.authenticate()
                     self.log.emit("Successful Login")
                     self.recordsDone.emit([])
-                if self.command == "get_sheets":
-                    sheets = google.get_sheet_names()
+                elif self.command == "get_sheets":
+                    sheets = notes.get_sheet_names()
                     self.log.emit("Retrived {} sheets successfully".format(len(sheets)))
                     self.recordsDone.emit(sheets)
                 elif self.command == "search":
-                    result = google.search(*self.args)
+                    result = notes.search(*self.args)
                     self.log.emit("Query: '{}'      Found {} results.".format(self.args[0], len(result)))
                     self.recordsDone.emit(result)
                 elif self.command == "get_copy":
                     code = None
                     try:
-                        code = google.get_document_text(self.args)
+                        code = notes.get_document_text(self.args)
                         if code:
                             self.log.emit("Code copied successfully")
                         else:
@@ -69,17 +74,17 @@ class GoogleServiceWorker(QThread):
 
                 elif self.command == "create_doc":
                     data = self.args
-                    doc_url, code_url = google.create_documents(data)
+                    doc_url, code_url = notes.create_documents(data)
                     self.log.emit("Google Docs: '{}' successfully created.".format(data['title']))
                     webbrowser.open(doc_url, new=2)
                     row = [data['category'], data['title'], doc_url, code_url]
-                    google.insert_row(data['sheet'], row)
+                    notes.insert_row(data['sheet'], row)
                     self.recordsDone.emit([[data['sheet']] + row])
                 elif self.command == "open_sheet":
-                    webbrowser.open("https://docs.google.com/spreadsheets/d/" + self.sheetId + "/edit", new=2)
+                    webbrowser.open("https://docs.notes.com/spreadsheets/d/" + self.sheetId + "/edit", new=2)
                 elif self.command == "refresh_cache":
                     self.log.emit("Updating Cache!")
-                    google.get_cache()
+                    notes.get_cache()
                     self.log.emit("Cache updated successfully!")
                     self.recordsDone.emit([])
                 else:

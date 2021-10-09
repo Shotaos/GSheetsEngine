@@ -18,8 +18,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>500</width>
-    <height>500</height>
+    <width>170</width>
+    <height>225</height>
    </size>
   </property>
   <property name="cursor">
@@ -27,6 +27,9 @@
   </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -48,11 +51,16 @@
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
      <property name="styleSheet">
-      <string notr="true">font-size:16px;
-font-weight:500;</string>
+      <string notr="true">font-size:16px;</string>
      </property>
      <property name="text">
-      <string>fdsafdsafdsaf</string>
+      <string/>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::AutoText</enum>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -65,7 +73,7 @@ font-weight:500;</string>
       </sizepolicy>
      </property>
      <property name="text">
-      <string>fdsafads</string>
+      <string/>
      </property>
     </widget>
    </item>

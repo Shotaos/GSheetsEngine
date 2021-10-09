@@ -34,7 +34,7 @@ class GoogleService:
 		self.creds = None
 
 
-	def authenticate(self):
+	def authenticate(self, dry_run=False):
 		if os.path.exists(TOKEN_FILE):
 			self.creds = Credentials.from_authorized_user_file(TOKEN_FILE, self.SCOPES)
 		else:
@@ -48,6 +48,8 @@ class GoogleService:
 				if not self.creds.valid:
 					raise PermissionError(f'Credentials are invalid after refresh')
 			else:
+				if dry_run:
+					raise PermissionError(f'No valid credentials on the system.')
 				flow = InstalledAppFlow.from_client_config(
 				GOOGLE_APP_CONFIG, self.SCOPES)
 				self.creds = flow.run_local_server(port=4338)
@@ -219,6 +221,22 @@ class UnrealService(GoogleService):
 		if self.cache is None:
 			self.get_cache()
 
+	@check_creds
+	def search(self, query):
+		result = []
+
+		for row in self.cache:
+			if re.search(query, row[2], re.IGNORECASE):
+				result.append(row)
+
+		for row in self.cache:
+			if re.search(query, row[3], re.IGNORECASE) and row not in result:
+				result.append(row)
+
+		return result
+
+
+	@check_creds
 	def get_cache(self):
 		sheets = self.get_sheet_names()
 		if not sheets:

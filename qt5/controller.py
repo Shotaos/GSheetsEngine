@@ -1,7 +1,7 @@
 import os
 import json
 from pathlib import Path
-from gsuite import NotesService
+from gsuite import NotesService, GoogleService
 from qt5.ui import alert_dialog, AddRecordUI, AssetResults
 from qt5.workers import GoogleServiceWorker
 from config import SETTINGS_FILE, TOPICS_FILE
@@ -23,9 +23,18 @@ class SheetsController():
                 try:
                     self.settings = json.load(f)
                 except json.JSONDecodeError:
-                    self.settings = {"sheetId": "", "excludeSheets" : []}
-        else:
-            self.settings = {"sheetId": "", "excludeSheets" : []}
+                    pass
+
+        default_settings = {
+                "sheetId": "",
+                "assetsSheet": "",
+                "iconsDir": "",
+                "assetsDir": "",
+                "excludeSheets" : []
+        }
+        self.settings = self.settings if hasattr(self, 'settings') else default_settings
+        #TODO - TEMPORARY PATCH FOR DEVELOPMENT
+        self.settings['assetsSheet'] = '1paKPUMRudVYq0OzQGSVj3POyfbqikQn6-U6TQLqU8lc'
 
     def _update_settings(self):
         self.settings = self._settings_view.get_settings()
@@ -45,9 +54,16 @@ class SheetsController():
     def _check_login(self):
         self._view.start_spinner()
 
-        service = NotesService(self.settings['sheetId'])
-        service.authenticate()
-        self._activate_startup()
+        self.login_worker = GoogleService()
+
+        try:
+            self.login_worker.authenticate(dry_run=True)
+            self._activate_startup()
+        except PermissionError as e:
+            alert_dialog()
+            self.login_worker.log.connect(self._logger)
+            self.login_worker.recordsDone.connect(self._activate_startup)
+            self.login_worker.start()
 
     def _activate_startup(self, arg=None):
         self._view.start_spinner()
@@ -159,9 +175,20 @@ class SheetsController():
         self._view.stop_spinner()
         
     def handle_search_asset(self):
-        assets = ['1GTsAFl6IOPSAOXHjEZ5ifGXE0pRhRbAu'] * 10
-        assets = AssetResults(assets, self._view)
-        status = assets.exec_()
+        query = self._view.get_search_text()
+        if query:
+            self._view.start_spinner()
+            self.asset_worker = GoogleServiceWorker(self.settings['assetsSheet'], "search_assets", (query,))
+            self.asset_worker.log.connect(self._logger)
+            self.asset_worker.recordsDone.connect(self.handle_search_asset_post)
+            self.asset_worker.start()
+        # start some worker
+
+    def handle_search_asset_post(self, assets):
+        self._view.stop_spinner()
+
+        self.assets_view = AssetResults(assets, self._view)
+        self.assets_view.exec_()
 
 
     def _connectSignals(self):

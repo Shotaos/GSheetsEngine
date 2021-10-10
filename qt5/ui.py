@@ -170,6 +170,7 @@ class SettingsUI(QDialog):
         self.settings[key] = value
 
     def set_settings(self, settings, sheets):
+        self.settings = {**settings, **self.settings}
         self.sheetId.setText(settings['sheetId'])
         self._add_topic_checkboxes(sheets, settings['excludeSheets'])
 
@@ -178,7 +179,14 @@ class SettingsUI(QDialog):
         for cb in self.sheets:
             if cb.isChecked():
                 topics_excluded.append(cb.text())
-        return {'sheetId': self.sheetId.text(), 'excludeSheets': topics_excluded, **self.settings}
+        return {
+                **self.settings,
+                'sheetId': self.sheetId.text(),
+                'excludeSheets': topics_excluded,
+                "assetsSheetId": self.assets_sheet_id.text(),
+                "assetsDefaultProject": self.default_project_field.text(),
+                "assetsDriveDirId": self.assets_drive_id.text(),
+               }
 
 
 class SheetsEngineUI(QMainWindow):

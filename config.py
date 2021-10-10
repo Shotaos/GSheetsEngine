@@ -5,7 +5,6 @@ GOOGLE_APP_CONFIG = {"web": {"client_id": "693899014701-h1f14417n5h0rp253l690q7n
 
 SETTINGS_DIR= Path.home() / ".sheetsearch"
 SETTINGS_DIR.mkdir(exist_ok=True)
-SETTINGS_FILE = SETTINGS_DIR / 'sheetsettings.json'
-CACHED_FILE = SETTINGS_DIR / 'data.cache'
+SETTINGS_FILE = SETTINGS_DIR / 'settingsv2.json'
 TOKEN_FILE = SETTINGS_DIR / 'token.json'
 TOPICS_FILE = SETTINGS_DIR / 'topics.json'

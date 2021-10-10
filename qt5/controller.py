@@ -27,9 +27,13 @@ class SheetsController():
 
         default_settings = {
                 "sheetId": "",
-                "assetsSheet": "",
-                "iconsDir": "",
-                "assetsDir": "",
+                "assets" : {
+                    "sheetId": None,
+                    "defaultProject": None,
+                    "driveDirId": None,
+                    "UE Versions": [1, 2, 3,],
+                    "projects": [],
+                },
                 "excludeSheets" : []
         }
         self.settings = self.settings if hasattr(self, 'settings') else default_settings

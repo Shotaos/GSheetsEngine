@@ -2,8 +2,8 @@ import os
 import json
 from pathlib import Path
 from gsuite import NotesService, GoogleService
-from qt5.ui import alert_dialog, AddRecordUI, AssetResults, DownloadAsset, AddNewAsset
-from qt5.workers import GoogleServiceWorker
+from qt5.ui import alert_dialog, AddRecordUI, AssetResults, DownloadAsset, AddNewAsset, ScanningUI
+from qt5.workers import GoogleServiceWorker, ScanProjectsWorker
 from config import SETTINGS_FILE, TOPICS_FILE
 
 class SheetsController():
@@ -208,7 +208,28 @@ class SheetsController():
     def handle_add_asset(self):
         self.new_asset = AddNewAsset(self._view)
         self.new_asset.exec_()
-        
+
+    def scan_ue_project(self):
+        if not hasattr(self, 'scanner') or self.scanner is None:
+            self.settings["assetsProjects"] = []
+            self.scanner = ScanningUI(self._view)
+            self.scanner_thread = ScanProjectsWorker()
+            self.scanner_thread.newProject.connect(self.add_ue_project)
+            self.scanner_thread.done.connect(self.close_scanner_window)
+            self.scanner_thread.statistics.connect(self.scanner.update_statistics)
+            self.scanner_thread.start()
+            self.scanner.exec_()
+        else:
+            self.scanner.exec_()
+
+    def close_scanner_window(self, done):
+        if self.scanner:
+            self.scanner.close()
+            self.scanner = None
+
+    def add_ue_project(self, _data):
+        self.settings["assetsProjects"].append(_data)
+        self._save_settings()
 
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
@@ -219,6 +240,7 @@ class SheetsController():
         self._view.add_new_button.clicked.connect(self.handle_add_record)
         self._view.add_asset.clicked.connect(self.handle_add_asset)
         self._view.search_asset.clicked.connect(self.handle_search_asset)
+        self._view.scan_ue.clicked.connect(self.scan_ue_project)
         self._view.filtersChanged.connect(self._update_rows)
         self._view.copy.connect(self.copy_code)
         self._view.refresh.clicked.connect(self.refresh_cache)

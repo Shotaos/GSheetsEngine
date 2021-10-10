@@ -23,7 +23,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="Tab">
       <attribute name="title">
@@ -114,7 +114,11 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QLineEdit" name="default_project_field"/>
+              <widget class="QLineEdit" name="default_project_field">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QPushButton" name="default_project_button">

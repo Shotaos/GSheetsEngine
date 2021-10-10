@@ -9,6 +9,18 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem, QApplication
 
+class ScanningUI(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'scanningUI.ui'), self)
+
+    def update_statistics(self, statistics):
+        index, total, _file = statistics
+        if len(_file) > 50:
+            _file = _file[:25] + '...' + _file[-25:]
+        self.current.setText(_file)
+        self.scanned.setText(str(index))
+        self.found.setText(str(total))
 
 class AddRecordUI(QDialog):
     def __init__(self, sheets=["1","2"]):
@@ -156,6 +168,7 @@ class SettingsUI(QDialog):
         super().__init__(parent)
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'settUI.ui'), self)
         self.settings = {}
+        self.default_project_button.clicked.connect(self.handle_select_file)
 
     def _add_topic_checkboxes(self, topics, excluded):
         self.sheets = []
@@ -172,7 +185,17 @@ class SettingsUI(QDialog):
     def set_settings(self, settings, sheets):
         self.settings = {**settings, **self.settings}
         self.sheetId.setText(settings['sheetId'])
+        self.assets_sheet_id.setText(settings['assetsSheetId'])
+        self.default_project_field.setText(settings['assetsDefaultProject'])
+        self.assets_drive_id.setText(settings['assetsDriveDirId'])
         self._add_topic_checkboxes(sheets, settings['excludeSheets'])
+
+    def handle_select_file(self):
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.Directory)
+        if dlg.exec_():
+            path = dlg.selectedFiles()[0]
+            self.default_project_field.setText(path)
 
     def get_settings(self):
         topics_excluded = []

@@ -2,11 +2,55 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from googleapiclient import errors
 from gsuite import NotesService, UnrealService
 import socket
+import json
+import os
 import urllib
 import queue
 import webbrowser
 import httplib2
 
+
+class ScanProjectsWorker(QThread):
+
+        newProject = pyqtSignal(tuple)
+        statistics = pyqtSignal(tuple)
+        done = pyqtSignal(bool)
+
+        def run(self):
+            total_dirs = 0
+            index = 0
+            drives = []
+
+            if os.name == 'nt':
+                drives.append('c:/')
+            elif os.name =='posix':
+                drives.append('/')
+
+            for drive in drives:
+
+                for root, dirs, files in os.walk(drive):
+                    index += 1
+
+                    if index % 20 == 0:
+                        self.statistics.emit((index, total_dirs, root))
+
+                    # Look for .uproject file in current directory
+                    for _file in files:
+                        if _file.endswith('.uproject'):
+                            total_dirs += 1
+                            # Parse .uproject to get the project name
+                            try:
+                                with open(os.path.join(root, _file)) as f:
+                                    uproject = json.load(f)
+                                    # Make assumption that first module name is the project name
+                                    name = uproject["Modules"][0]["Name"]
+                                    self.newProject.emit((name, root))
+
+                            except (json.JSONDecodeError, KeyError, IndexError):
+                                pass
+            self.done.emit(True)
+
+            
 
 class AssetThumbnailWorker(QThread):
         resultReady = pyqtSignal(tuple)
@@ -49,6 +93,7 @@ class GoogleServiceWorker(QThread):
                     self.recordsDone.emit(result)
                 elif self.command == "login":
                     notes.authenticate()
+                    unreal.authenticate()
                     self.log.emit("Successful Login")
                     self.recordsDone.emit([])
                 elif self.command == "get_sheets":

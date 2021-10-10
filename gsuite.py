@@ -211,25 +211,26 @@ class GoogleService:
 
 
 class UnrealService(GoogleService):
+	cache = None
+
 	def __init__(self, spreadsheet_id):
 		super().__init__()
 		self.spreadsheet_id = spreadsheet_id
-		self.cache = None
 
 	def authenticate(self):
 		super().authenticate()
-		if self.cache is None:
+		if UnrealService.cache is None:
 			self.get_cache()
 
 	@check_creds
 	def search(self, query):
 		result = []
 
-		for row in self.cache:
+		for row in UnrealService.cache:
 			if re.search(query, row[2], re.IGNORECASE):
 				result.append(row)
 
-		for row in self.cache:
+		for row in UnrealService.cache:
 			if re.search(query, row[3], re.IGNORECASE) and row not in result:
 				result.append(row)
 
@@ -243,19 +244,19 @@ class UnrealService(GoogleService):
 			raise ValueError(f"Could not retrive sheet names from Sprreadsheet: {self.spreadsheet_id}")
 
 		sheet = sheets[0]
-		self.cache = self.get_sheet_data(sheet, 'A:F')
+		UnrealService.cache = self.get_sheet_data(sheet, 'A:F')
 
 
 class NotesService(GoogleService):
+	cache = None
 
 	def __init__(self, spreadsheet_id):
 		super().__init__()
 		self.spreadsheet_id = spreadsheet_id
-		self.cache = None
 
 	def authenticate(self):
 		super().authenticate()
-		if self.cache is None:
+		if NotesService.cache is None:
 			self.get_cache()
 
 
@@ -264,8 +265,8 @@ class NotesService(GoogleService):
 
 		result = []
 
-		if self.cache is not None:
-			for row in self.cache:
+		if NotesService.cache is not None:
+			for row in NotesService.cache:
 				if not sheets or row[0].lower() in [_.lower() for _ in sheets]:
 					if re.search(query, row[2], re.IGNORECASE):
 						result.append(row)
@@ -444,7 +445,7 @@ class NotesService(GoogleService):
 					code_link = '' if len(row) < 4 else row[3]
 					result.append([sheet_name, row[0], row[1], link, code_link])
 
-		self.cache = result
+		NotesService.cache = result
 
 
 

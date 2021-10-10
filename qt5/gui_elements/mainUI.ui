@@ -62,6 +62,13 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="scan_ue">
+        <property name="text">
+         <string>Scan UE Projects</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="refresh">
         <property name="text">
          <string>Refresh Cache</string>

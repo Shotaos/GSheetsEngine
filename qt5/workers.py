@@ -21,7 +21,7 @@ class AssetThumbnailWorker(QThread):
                     index, _id = self.queue.get(block=False)
                     data = urllib.request.urlopen(f"https://drive.google.com/uc?export=view&id={_id}").read()
                     self.resultReady.emit((index, data))
-                except (queue.Empty, urllib.error.HTTPError) as e:
+                except (queue.Empty, urllib.error.HTTPError, urllib.error.URLError) as e:
                     print(e)
 
 

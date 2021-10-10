@@ -6,8 +6,9 @@ from qt5.spin import QtWaitingSpinner
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem, QApplication
+
 
 class AddRecordUI(QDialog):
     def __init__(self, sheets=["1","2"]):
@@ -27,6 +28,72 @@ class AddRecordUI(QDialog):
             "quick_text": self.quick_text.toPlainText(),
         }
 
+class AddNewAsset(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'addNewAsset.ui'), self)
+
+class ProjectOption(QWidget):
+    def __init__(self, name, path):
+        super().__init__()
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'projectOption.ui'), self)
+        self.project_name = name
+        self.project_path = path
+
+class DownloadAsset(QDialog):
+
+    def __init__(self, data, parent=None):
+        super().__init__(parent)
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'downloadAsset.ui'), self)
+        self.data = data
+        self.manual_path = None
+        self.projects = []
+        name = data[2]
+        version = data[1]
+        thumbnail = data[4]
+
+        self.projects_layout = self.projects_list.layout()
+        self.name.setText(name)
+        self.ue_version.setText(version)
+
+        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
+        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
+        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
+        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
+        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
+        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
+
+        self.select_file.clicked.connect(self.handle_select_file)
+
+        q = queue.Queue()
+        q.put((0, thumbnail))
+        self.thread = AssetThumbnailWorker(q)
+        self.thread.resultReady.connect(self.updateThumbnail)
+        self.thread.start()
+
+
+    def updateThumbnail(self, _data):
+        index, data = _data
+        image = QtGui.QImage()
+        image.loadFromData(data)
+        self.thumbnail.setPixmap(QtGui.QPixmap(image).scaled(150, 150, Qt.KeepAspectRatio))
+
+    def handle_select_file(self):
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.Directory)
+        if dlg.exec_():
+            path = dlg.selectedFiles()[0]
+            self.path.setText(path)
+            self.manual_path = path
+
+    def get_data(self):
+        result = [] if self.manual_path is None else [self.manual_path]
+
+        for project in self.projects:
+            if project.select_project.isChecked():
+                result.append(project.project_path.text())
+
+        return (self.overwrite.isChecked(), result)
 
 class AssetResults(QDialog):
     def __init__(self, assets, parent=None):
@@ -43,7 +110,7 @@ class AssetResults(QDialog):
             name = _data[2]
             version = _data[1]
             thumbnail = _data[4]
-            asset = AssetResultWidget()
+            asset = AssetResultWidget(_data)
             asset.name.setText(name)
             asset.ue_version.setText(version)
             asset.setObjectName('asset_result')
@@ -67,16 +134,22 @@ class AssetResults(QDialog):
 
 
 class AssetResultWidget(QWidget):
-    def __init__(self, parent=None):
+    clicked = pyqtSignal(list)
+
+    def __init__(self, data, parent=None):
         super().__init__(parent)
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'assetResultWidget.ui'), self)
+        self.data = data
+
+    def mouseReleaseEvent(self, event):
+        self.clicked.emit(self.data)
 
     def enterEvent(self, event):
         self.setStyleSheet('#name{font-weight:bold;}')
 
     def leaveEvent(self, event):
         self.setStyleSheet('#name{font-weight:normal;}')
-        
+
 class SettingsUI(QDialog):
 
     def __init__(self, parent):

@@ -2,7 +2,7 @@ import os
 import json
 from pathlib import Path
 from gsuite import NotesService, GoogleService
-from qt5.ui import alert_dialog, AddRecordUI, AssetResults
+from qt5.ui import alert_dialog, AddRecordUI, AssetResults, DownloadAsset, AddNewAsset
 from qt5.workers import GoogleServiceWorker
 from config import SETTINGS_FILE, TOPICS_FILE
 
@@ -187,9 +187,26 @@ class SheetsController():
     def handle_search_asset_post(self, assets):
         self._view.stop_spinner()
 
-        self.assets_view = AssetResults(assets, self._view)
-        self.assets_view.exec_()
+        if assets:
+            self.assets_view = AssetResults(assets, self._view)
+            for i, widget in enumerate(self.assets_view.widgets):
+                widget.clicked.connect(self.__asset_selected)
+            self.assets_view.exec_()
 
+    def __asset_selected(self, data):
+        self.download_view = DownloadAsset(data, self.assets_view)
+        self.download_view.download_asset.clicked.connect(self.handle_asset_adding)
+        self.download_view.exec_()
+    
+    def handle_asset_adding(self):
+        data = self.download_view.get_data()
+        self.download_view.close()
+        print(data)
+
+    def handle_add_asset(self):
+        self.new_asset = AddNewAsset(self._view)
+        self.new_asset.exec_()
+        
 
     def _connectSignals(self):
         self._view.search_button.clicked.connect(self._handle_search)
@@ -198,6 +215,7 @@ class SheetsController():
         self._settings_view.okButton.clicked.connect(self._update_settings)
         self._view.open_sheet_button.clicked.connect(self._navigate_to_sheet)
         self._view.add_new_button.clicked.connect(self.handle_add_record)
+        self._view.add_asset.clicked.connect(self.handle_add_asset)
         self._view.search_asset.clicked.connect(self.handle_search_asset)
         self._view.filtersChanged.connect(self._update_rows)
         self._view.copy.connect(self.copy_code)

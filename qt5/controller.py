@@ -168,7 +168,7 @@ class SheetsController():
 
     def refresh_cache(self):
         self._view.start_spinner()
-        self.worker = GoogleServiceWorker(self.settings['sheetId'], "refresh_cache", None)
+        self.worker = GoogleServiceWorker(self.settings['sheetId'], "refresh_cache", assets_sheetId=self.settings['assetsSheetId'])
         self.worker.log.connect(self._logger)
         self.worker.recordsDone.connect(self.refresh_done)
         self.worker.start()
@@ -180,7 +180,8 @@ class SheetsController():
         query = self._view.get_search_text()
         if query:
             self._view.start_spinner()
-            self.asset_worker = GoogleServiceWorker(self.settings['assetsSheet'], "search_assets", (query,))
+            self.asset_worker = GoogleServiceWorker(self.settings['assetsSheet'],
+                    "search_assets", (query,), assets_sheetId=self.settings['assetsSheetId'])
             self.asset_worker.log.connect(self._logger)
             self.asset_worker.recordsDone.connect(self.handle_search_asset_post)
             self.asset_worker.start()

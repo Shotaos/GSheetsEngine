@@ -75,17 +75,18 @@ class GoogleServiceWorker(QThread):
         recordsDone = pyqtSignal(list)
         codeDone = pyqtSignal(str)
 
-        def __init__(self, sheetId, command, args=None, parent=None):
+        def __init__(self, sheetId, command, args=None, assets_sheetId=None, parent=None):
             super(GoogleServiceWorker, self).__init__(parent)
             self.command = command
             self.args = args
+            self.assets_sheetId = assets_sheetId
             self.sheetId = sheetId
             self.notes_service = NotesService(sheetId)
 
         def run(self):
             try:
                 notes = NotesService(self.sheetId)
-                unreal = UnrealService(self.sheetId)
+                unreal = UnrealService(self.assets_sheetId)
 
                 if self.command == "search_assets":
                     result = unreal.search(*self.args)
@@ -130,6 +131,7 @@ class GoogleServiceWorker(QThread):
                 elif self.command == "refresh_cache":
                     self.log.emit("Updating Cache!")
                     notes.get_cache()
+                    unreal.get_cache()
                     self.log.emit("Cache updated successfully!")
                     self.recordsDone.emit([])
                 else:

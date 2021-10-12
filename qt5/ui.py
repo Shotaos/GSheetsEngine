@@ -6,7 +6,7 @@ from qt5.spin import QtWaitingSpinner
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog
+from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QInputDialog
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem, QApplication
 
 class ScanningUI(QDialog):
@@ -41,20 +41,47 @@ class AddRecordUI(QDialog):
         }
 
 class AddNewAsset(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, settings, parent=None):
         super().__init__(parent)
+        self.settings = settings
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'addNewAsset.ui'), self)
+
+        self.asset_directory_button.clicked.connect(lambda : self.handle_select_file(self.asset_directory_field))
+        self.asset_thumbnail_button.clicked.connect(lambda : self.handle_select_file(self.asset_thumbnail_field, False))
+        self.generic_file_button.clicked.connect(lambda : self.handle_select_file(self.generic_file_field, False))
+        self.generic_thumb_button.clicked.connect(lambda : self.handle_select_file(self.generic_thumb_field, False))
+
+        self.asset_ue_version.addItems(settings.get("assetsuE Versions", []))
+
+    def handle_select_file(self, field, directory_only=True):
+        dlg = QFileDialog()
+
+        if directory_only:
+            dlg.setFileMode(QFileDialog.Directory)
+        else:
+            dlg.setFileMode(QFileDialog.ExistingFile)
+
+        if dlg.exec_():
+            path = dlg.selectedFiles()[0]
+            field.setText(path)
+
+    def show_dialog(self):
+        text, ok = QInputDialog.getText(self, 'Unreal Engine Version', 'UE Version')
+        if ok:
+            self.asset_ue_version.addItem(text)
+            self.asset_ue_version.setCurrentText(text)
+            return text
 
 class ProjectOption(QWidget):
     def __init__(self, name, path):
         super().__init__()
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'projectOption.ui'), self)
-        self.project_name = name
-        self.project_path = path
+        self.project_name.setText(name)
+        self.project_path.setText(path)
 
 class DownloadAsset(QDialog):
 
-    def __init__(self, data, parent=None):
+    def __init__(self, data, settings, parent=None):
         super().__init__(parent)
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'downloadAsset.ui'), self)
         self.data = data
@@ -68,12 +95,10 @@ class DownloadAsset(QDialog):
         self.name.setText(name)
         self.ue_version.setText(version)
 
-        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
-        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
-        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
-        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
-        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
-        self.projects_layout.insertWidget(0, ProjectOption('kata', 'ka'))
+        for name, project_path in settings['assetsProjects']:
+            project = ProjectOption(name, project_path)
+            self.projects_layout.insertWidget(0, project)
+            self.projects.append(project)
 
         self.select_file.clicked.connect(self.handle_select_file)
 
@@ -102,7 +127,7 @@ class DownloadAsset(QDialog):
         result = [] if self.manual_path is None else [self.manual_path]
 
         for project in self.projects:
-            if project.select_project.isChecked():
+            if project.checked.isChecked():
                 result.append(project.project_path.text())
 
         return (self.overwrite.isChecked(), result)

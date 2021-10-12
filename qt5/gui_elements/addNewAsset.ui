@@ -75,7 +75,7 @@
               <widget class="QComboBox" name="asset_ue_version"/>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="add_version">
                <property name="maximumSize">
                 <size>
                  <width>30</width>
@@ -137,22 +137,6 @@
               <widget class="QLabel" name="label_5">
                <property name="text">
                 <string>Directory To Upload</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="asset_use_default">
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="text">
-                <string>Use Default</string>
                </property>
               </widget>
              </item>

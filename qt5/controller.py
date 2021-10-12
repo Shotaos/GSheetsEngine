@@ -197,7 +197,7 @@ class SheetsController():
             self.assets_view.exec_()
 
     def __asset_selected(self, data):
-        self.download_view = DownloadAsset(data, self.assets_view)
+        self.download_view = DownloadAsset(data, self.settings, self.assets_view)
         self.download_view.download_asset.clicked.connect(self.handle_asset_adding)
         self.download_view.exec_()
     
@@ -207,8 +207,15 @@ class SheetsController():
         print(data)
 
     def handle_add_asset(self):
-        self.new_asset = AddNewAsset(self._view)
+        self.new_asset = AddNewAsset(self.settings, self._view)
+        self.new_asset.add_version.clicked.connect(self.handle_add_ue_version)
         self.new_asset.exec_()
+
+    def handle_add_ue_version(self):
+        version = self.new_asset.show_dialog()
+        if version:
+            self.settings.get("assetsuE Versions", []).append(version)
+            self._save_settings()
 
     def scan_ue_project(self):
         if not hasattr(self, 'scanner') or self.scanner is None:

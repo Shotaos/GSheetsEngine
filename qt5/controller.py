@@ -30,7 +30,7 @@ class SheetsController():
                 "assetsSheetId": None,
                 "assetsDefaultProject": None,
                 "assetsDriveDirId": None,
-                "assetsuE Versions": [1, 2, 3,],
+                "assetsuE Versions": ["UE 4.27"],
                 "assetsProjects": [],
                 "excludeSheets" : []
         }

@@ -105,7 +105,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="widget_6" native="true">
+    <widget class="QWidget" name="projects_container" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <widget class="QLabel" name="label_4">
@@ -138,7 +138,7 @@ font-size:16px;</string>
            <x>0</x>
            <y>0</y>
            <width>376</width>
-           <height>199</height>
+           <height>198</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">

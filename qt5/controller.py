@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from gsuite import NotesService, GoogleService
 from qt5.ui import alert_dialog, AddRecordUI, AssetResults, DownloadAsset, AddNewAsset, ScanningUI
-from qt5.workers import GoogleServiceWorker, ScanProjectsWorker
+from qt5.workers import GoogleServiceWorker, ScanProjectsWorker, AssetsDownloaderWorker
 from config import SETTINGS_FILE, TOPICS_FILE
 
 class SheetsController():
@@ -204,7 +204,12 @@ class SheetsController():
     def handle_asset_adding(self):
         data = self.download_view.get_data()
         self.download_view.close()
-        print(data)
+        self._view.start_spinner()
+        self.assets_downloader = AssetsDownloaderWorker(data)
+        self.assets_downloader.log.connect(self._logger)
+        self.assets_downloader.done.connect(self.refresh_done)
+        self.assets_downloader.start()
+        
 
     def handle_add_asset(self):
         self.new_asset = AddNewAsset(self.settings, self._view)

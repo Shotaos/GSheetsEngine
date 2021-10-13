@@ -127,6 +127,9 @@ class DownloadAsset(QDialog):
             self.projects_layout.insertWidget(0, project)
             self.projects.append(project)
 
+        if data[0] != 'Asset':
+            self.projects_container.setEnabled(False)
+
         self.select_file.clicked.connect(self.handle_select_file)
 
         q = queue.Queue()
@@ -155,9 +158,9 @@ class DownloadAsset(QDialog):
 
         for project in self.projects:
             if project.checked.isChecked():
-                result.append(project.project_path.text())
+                result.append(os.path.join(project.project_path.text(), 'Content'))
 
-        return (self.overwrite.isChecked(), result)
+        return (self.data[5], self.overwrite.isChecked(), result)
 
 class AssetResults(QDialog):
     def __init__(self, assets, parent=None):
@@ -183,7 +186,7 @@ class AssetResults(QDialog):
             layout.addWidget(asset, k // 4, k % 4)
 
 
-        for i in range(10):
+        for i in range(3):
             thread = AssetThumbnailWorker(q)
             thread.resultReady.connect(self.updateThumbnail)
             thread.start()
@@ -209,10 +212,12 @@ class AssetResultWidget(QWidget):
         self.clicked.emit(self.data)
 
     def enterEvent(self, event):
-        self.setStyleSheet('#name{font-weight:bold;}')
+        pass
+        #self.setStyleSheet('#name{font-weight:bold;}')
 
     def leaveEvent(self, event):
-        self.setStyleSheet('#name{font-weight:normal;}')
+        pass
+        #self.setStyleSheet('#name{font-weight:normal;}')
 
 class SettingsUI(QDialog):
 

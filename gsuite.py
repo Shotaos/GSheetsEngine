@@ -24,6 +24,7 @@ def check_creds(func):
 		return func(self, *args, **kwargs)
 	return wrap
 
+
 class GoogleService:
 	SCOPES = [
         'https://www.googleapis.com/auth/spreadsheets',
@@ -127,6 +128,10 @@ class GoogleService:
 			status, done = downloader.next_chunk()
 		return local_path
 
+	@check_creds
+	def drive_download_file_cache(self, file_id, cache_dir):
+		self.drive_download_file(file_id, os.path.join(cache_dir, file_id))
+
 	def drive_get_folder_contents(self, folder_id):
 
 		q = f"parents = '{folder_id}'"
@@ -216,7 +221,9 @@ class GoogleService:
 		else:
 			destination = os.path.join(cache, archive)
 
-		shutil.make_archive(destination, 'zip', path_to_folder)
+		shutil.make_archive(destination, 'zip',
+                os.path.dirname(path_to_folder),
+                os.path.basename(path_to_folder))
 		_data = self.drive_upload_file(parent_id, destination + '.zip')
 		os.remove(destination + '.zip')
 

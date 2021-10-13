@@ -1,8 +1,14 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 from googleapiclient import errors
 from gsuite import NotesService, UnrealService
+from config import ICONS_CACHE, ASSETS_CACHE
 import socket
+import tempfile
+import pathlib
 import json
+import glob
+import shutil
+import zipfile
 import os
 import urllib
 import queue
@@ -22,7 +28,7 @@ class ScanProjectsWorker(QThread):
             drives = []
 
             if os.name == 'nt':
-                drives.append('c:/')
+                drives.append('c://')
             elif os.name =='posix':
                 drives.append('/')
 
@@ -63,11 +69,62 @@ class AssetThumbnailWorker(QThread):
             while not self.queue.empty():
                 try:
                     index, _id = self.queue.get(block=False)
-                    data = urllib.request.urlopen(f"https://drive.google.com/uc?export=view&id={_id}").read()
-                    self.resultReady.emit((index, data))
+                    filename = os.path.join(ICONS_CACHE, _id)
+
+                    if not os.path.isfile(filename):
+                        unreal = UnrealService(None)
+                        unreal.drive_download_file_cache(_id, ICONS_CACHE)
+                    self.resultReady.emit((index, open(filename, 'br').read()))
+
                 except (queue.Empty, urllib.error.HTTPError, urllib.error.URLError) as e:
                     print(e)
 
+class AssetsDownloaderWorker(QThread):
+        done = pyqtSignal(list)
+        log = pyqtSignal(str)
+
+        def __init__(self, data, parent=None):
+            super().__init__(parent)
+            self.data = data
+
+        def run(self):
+            try:
+                _id, overwrite, data = self.data
+                filename = os.path.join(ASSETS_CACHE, _id)
+
+                if not os.path.isfile(filename):
+                    unreal = UnrealService(None)
+                    unreal.drive_download_file_cache(_id, ASSETS_CACHE)
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    tmpdir = pathlib.Path(tmpdir)
+
+                    if zipfile.is_zipfile(filename):
+                        shutil.unpack_archive(filename, tmpdir, 'zip')
+                    else:
+                        shutil.copy(filename, tmpdir)
+
+                    for target_dir in [pathlib.Path(_) for _ in data]:
+                        for _file in tmpdir.glob('*'):
+                            source = tmpdir / _file.name
+                            target = target_dir / _file.name
+
+                            print(source, target)
+                            if overwrite or not target.exists():
+                                if source.is_dir():
+                                    shutil.copytree(source, target, dirs_exist_ok=True)
+                                elif source.is_file():
+                                    shutil.copy(source, target)
+
+                    self.log.emit("Successfully Added Asset")
+            except Exception as e:
+                print(e)
+                self.log.emit(f"Asset Failed {e}")
+            finally:
+                self.done.emit([])
+
+            
+            
 
 class GoogleServiceWorker(QThread):
 
@@ -127,7 +184,7 @@ class GoogleServiceWorker(QThread):
                 elif self.command == "upload_regular":
                     data, settings = self.args
                     try:
-                        file_id = unreal.drive_upload_file(settings['assetsDriveDirId'], data['path'])['id']
+                        file_id = unreal.upload_zipped_folder(data['path'], settings['assetsDriveDirId'])
                         thumbnail_id = '' if not data['icon'] else unreal.drive_upload_file(
                                 settings['assetsDriveDirId'], data['icon'])['id']
 

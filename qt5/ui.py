@@ -54,9 +54,14 @@ class AddNewAsset(QDialog):
         self.asset_ue_version.addItems(settings.get("assetsuE Versions", []))
 
     def handle_select_file(self, field, directory_only=True):
+        """
+        Generic method to handle all File Dialogs.
+        """
+
         dlg = QFileDialog()
 
         if directory_only:
+            # Select only directories
             dlg.setFileMode(QFileDialog.Directory)
         else:
             dlg.setFileMode(QFileDialog.ExistingFile)
@@ -65,12 +70,34 @@ class AddNewAsset(QDialog):
             path = dlg.selectedFiles()[0]
             field.setText(path)
 
+        # If directory was selected we can enable upload button
+        if field in (self.generic_file_field, self.asset_directory_field):
+            self.upload.setEnabled(True)
+
     def show_dialog(self):
         text, ok = QInputDialog.getText(self, 'Unreal Engine Version', 'UE Version')
         if ok:
             self.asset_ue_version.addItem(text)
             self.asset_ue_version.setCurrentText(text)
             return text
+
+    def get_data(self):
+        return {
+                "asset": {
+                    "name": self.asset_name.text(),
+                    "ue_version": self.asset_ue_version.currentText(),
+                    "tags": self.asset_tags.text(),
+                    "path": self.asset_directory_field.text(),
+                    "icon": self.asset_thumbnail_field.text(),
+                    },
+                "regular" : {
+                    "name": self.generic_name.text(),
+                    "type": self.generic_type.text(),
+                    "tags": self.generic_tags.text(),
+                    "path": self.generic_file_field.text(),
+                    "icon": self.generic_thumb_field.text(),
+                    }
+        }
 
 class ProjectOption(QWidget):
     def __init__(self, name, path):

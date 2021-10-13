@@ -105,6 +105,44 @@ class GoogleServiceWorker(QThread):
                     result = notes.search(*self.args)
                     self.log.emit("Query: '{}'      Found {} results.".format(self.args[0], len(result)))
                     self.recordsDone.emit(result)
+                elif self.command == "upload_asset":
+                    data, settings = self.args
+                    try:
+                        asset_id = unreal.upload_zipped_folder(data['path'], settings['assetsDriveDirId'])
+                        thumbnail_id = '' if not data['icon'] else unreal.drive_upload_file(
+                                settings['assetsDriveDirId'], data['icon'])['id']
+
+                        row = ['Asset', data['ue_version'], data['name'], data['tags'], thumbnail_id, asset_id]
+                        unreal.insert_row(
+                                'assets',
+                                row,
+                                'A:F')
+
+                        self.log.emit("Asset uploaded successfully")
+                    except (TimeoutError, Exception) as e:
+                        self.log.emit(f"Asset upload Failed {e}")
+                    finally:
+                        self.recordsDone.emit([])
+
+                elif self.command == "upload_regular":
+                    data, settings = self.args
+                    try:
+                        file_id = unreal.drive_upload_file(settings['assetsDriveDirId'], data['path'])['id']
+                        thumbnail_id = '' if not data['icon'] else unreal.drive_upload_file(
+                                settings['assetsDriveDirId'], data['icon'])['id']
+
+                        row = [data['type'], '', data['name'], data['tags'], thumbnail_id, file_id]
+                        unreal.insert_row(
+                                'assets',
+                                row,
+                                'A:F')
+
+                        self.log.emit("Asset uploaded successfully")
+                    except (TimeoutError, Exception) as e:
+                        self.log.emit(f"Asset upload Failed {e}")
+                    finally:
+                        self.recordsDone.emit([])
+
                 elif self.command == "get_copy":
                     code = None
                     try:

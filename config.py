@@ -8,3 +8,7 @@ SETTINGS_DIR.mkdir(exist_ok=True)
 SETTINGS_FILE = SETTINGS_DIR / 'settingsv2.json'
 TOKEN_FILE = SETTINGS_DIR / 'token.json'
 TOPICS_FILE = SETTINGS_DIR / 'topics.json'
+ASSETS_CACHE = SETTINGS_DIR / 'assets'
+ICONS_CACHE = SETTINGS_DIR / 'icons'
+ASSETS_CACHE.mkdir(exist_ok=True)
+ICONS_CACHE.mkdir(exist_ok=True)

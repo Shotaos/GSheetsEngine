@@ -5,6 +5,7 @@ from collections import deque
 from pathlib import Path
 import io
 import os
+import shutil
 import backoff
 import pathlib
 import googleapiclient
@@ -13,7 +14,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.http import MediaIoBaseDownload
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from config import GOOGLE_APP_CONFIG, TOKEN_FILE
+from config import GOOGLE_APP_CONFIG, TOKEN_FILE, ASSETS_CACHE, ICONS_CACHE, SETTINGS_DIR
 
 def check_creds(func):
 	@functools.wraps(func)
@@ -63,13 +64,13 @@ class GoogleService:
 		self.drive = build('drive', 'v3', credentials=self.creds)
 
 	@check_creds
-	def insert_row(self, sheet, row):
+	def insert_row(self, sheet, row, _range='A:C'):
 
 		body = {'majorDimension': 'ROWS',
 			'values': [row]}
 		request = self.sheets.values().append(spreadsheetId=self.spreadsheet_id,
 							valueInputOption="RAW",
-							range=sheet + '!A:C',
+							range=sheet + '!' + _range,
 							body=body)
 		result = request.execute()
 		# Update cache
@@ -155,11 +156,8 @@ class GoogleService:
 		path = os.path.join(path)
 		media = googleapiclient.http.MediaFileUpload(path)
 
-		try:
-			return self.drive.files().create(
-				body=file_metadata, media_body=media, fields='id').execute()
-		except TimeoutError as e:
-			print(e)
+		return self.drive.files().create(
+			body=file_metadata, media_body=media, fields='id').execute()
 
 	@check_creds
 	def traverse_drive_recursively(self, folder_id, path):
@@ -208,6 +206,21 @@ class GoogleService:
 				print("Uploading Folder: ", directory)
 				_id = self.create_folder(parent_dir_id, directory)
 				cache[os.path.join(root, directory)] = _id
+
+	@check_creds
+	def upload_zipped_folder(self, path_to_folder, parent_id, cache=None):
+		archive = os.urandom(10).hex()
+
+		if cache is None:
+			destination = os.path.join(SETTINGS_DIR, archive)
+		else:
+			destination = os.path.join(cache, archive)
+
+		shutil.make_archive(destination, 'zip', path_to_folder)
+		_data = self.drive_upload_file(parent_id, destination + '.zip')
+		os.remove(destination + '.zip')
+
+		return _data['id']
 
 
 class UnrealService(GoogleService):

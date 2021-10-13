@@ -209,6 +209,7 @@ class SheetsController():
     def handle_add_asset(self):
         self.new_asset = AddNewAsset(self.settings, self._view)
         self.new_asset.add_version.clicked.connect(self.handle_add_ue_version)
+        self.new_asset.upload.clicked.connect(self.handle_asset_upload)
         self.new_asset.exec_()
 
     def handle_add_ue_version(self):
@@ -216,6 +217,30 @@ class SheetsController():
         if version:
             self.settings.get("assetsuE Versions", []).append(version)
             self._save_settings()
+
+    def handle_asset_upload(self):
+        self._view.start_spinner()
+        data = self.new_asset.get_data()
+
+        if data["asset"]["path"]:
+            command = "upload_asset"
+            _data = data["asset"]
+        else:
+            command = "upload_regular"
+            _data = data["regular"]
+
+
+        self.asset_upload_worker = GoogleServiceWorker(
+                self.settings['assetsSheetId'],
+                command,
+                (_data, self.settings),
+                assets_sheetId=self.settings['assetsSheetId'])
+
+        self.asset_upload_worker.log.connect(self._logger)
+        self.asset_upload_worker.recordsDone.connect(self.refresh_done)
+        self.asset_upload_worker.start()
+        self.new_asset.close()
+
 
     def scan_ue_project(self):
         if not hasattr(self, 'scanner') or self.scanner is None:

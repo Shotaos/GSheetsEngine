@@ -17,6 +17,11 @@ import httplib2
 
 
 class ScanProjectsWorker(QThread):
+        exclude = [
+                'C://windows',
+                'C://windows',
+        ]
+                
 
         newProject = pyqtSignal(tuple)
         statistics = pyqtSignal(tuple)
@@ -28,13 +33,16 @@ class ScanProjectsWorker(QThread):
             drives = []
 
             if os.name == 'nt':
-                drives.append('c://')
+                possible_drives = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                drives = drives + [f"{_}://" for _ in possible_drives if os.path.exists(f"{_}:")]
+                print("Windows drives found:", ",".join(drives))
             elif os.name =='posix':
                 drives.append('/')
 
             for drive in drives:
 
-                for root, dirs, files in os.walk(drive):
+                for root, dirs, files in os.walk(drive, topdown=True):
+                    dirs[:] = [d for d in dirs if d not in ScanProjectsWorker.exclude]
                     index += 1
 
                     if index % 20 == 0:

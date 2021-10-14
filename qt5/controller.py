@@ -56,13 +56,18 @@ class SheetsController():
     def _check_login(self):
         self._view.start_spinner()
 
-        self.login_worker = GoogleService()
+        login = GoogleService()
 
         try:
-            self.login_worker.authenticate(dry_run=True)
+            login.authenticate(dry_run=True)
             self._activate_startup()
         except PermissionError as e:
             alert_dialog()
+
+            self.login_worker = GoogleServiceWorker(
+                    self.settings['sheetId'],
+                    "login",
+                    assets_sheetId=self.settings['assetsSheetId'])
             self.login_worker.log.connect(self._logger)
             self.login_worker.recordsDone.connect(self._activate_startup)
             self.login_worker.start()

@@ -39,8 +39,6 @@ class GoogleService:
 	def authenticate(self, dry_run=False):
 		if os.path.exists(TOKEN_FILE):
 			self.creds = Credentials.from_authorized_user_file(TOKEN_FILE, self.SCOPES)
-		else:
-			raise PermissionError(f'Google Authorized user file does not exist: {TOKEN_FILE}')
 
 		# If there are no (valid) credentials available, let the user log in.
 		if not self.creds or not self.creds.valid:
@@ -60,9 +58,12 @@ class GoogleService:
 			with open(TOKEN_FILE, 'w') as token:
 				token.write(self.creds.to_json())
 
-		self.docs = build('docs', 'v1', credentials=self.creds).documents()
-		self.sheets = build('sheets', 'v4', credentials=self.creds).spreadsheets()
-		self.drive = build('drive', 'v3', credentials=self.creds)
+		if self.creds.valid:
+			self.docs = build('docs', 'v1', credentials=self.creds).documents()
+			self.sheets = build('sheets', 'v4', credentials=self.creds).spreadsheets()
+			self.drive = build('drive', 'v3', credentials=self.creds)
+		else:
+			raise PermissionError(f'Credentials are invalid after refresh')
 
 	@check_creds
 	def insert_row(self, sheet, row, _range='A:C'):

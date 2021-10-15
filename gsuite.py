@@ -63,7 +63,7 @@ class GoogleService:
 			self.sheets = build('sheets', 'v4', credentials=self.creds).spreadsheets()
 			self.drive = build('drive', 'v3', credentials=self.creds)
 		else:
-			raise PermissionError(f'Credentials are invalid after refresh')
+			raise PermissionError(f'Google Authorized user file does not exist: {TOKEN_FILE}')
 
 	@check_creds
 	def insert_row(self, sheet, row, _range='A:C'):

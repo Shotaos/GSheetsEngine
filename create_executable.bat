@@ -1,1 +1,1 @@
-pyinstaller -w --name GsheetsEngine cli.py --icon=assets\icon.jpg
+pyinstaller -w --name GsheetsEngineV3 cli.py --icon=assets\icon.ico

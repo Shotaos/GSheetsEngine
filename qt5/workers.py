@@ -18,8 +18,9 @@ import httplib2
 
 class ScanProjectsWorker(QThread):
         exclude = [
-                'C://windows',
-                'C://windows',
+                'C://Windows',
+                'C://Program Files',
+                'C://Program Files (x86)',
         ]
                 
 
@@ -42,7 +43,7 @@ class ScanProjectsWorker(QThread):
             for drive in drives:
 
                 for root, dirs, files in os.walk(drive, topdown=True):
-                    dirs[:] = [d for d in dirs if d not in ScanProjectsWorker.exclude]
+                    dirs[:] = [d for d in dirs if root+d not in ScanProjectsWorker.exclude]
                     index += 1
 
                     if index % 20 == 0:

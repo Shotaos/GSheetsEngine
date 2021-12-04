@@ -217,10 +217,10 @@ class SheetsController():
         
 
     def handle_add_asset(self):
-        self.new_asset = AddNewAsset(self.settings, self._view)
+        self.new_asset = AddNewAsset(self.settings)
         self.new_asset.add_version.clicked.connect(self.handle_add_ue_version)
         self.new_asset.upload.clicked.connect(self.handle_asset_upload)
-        self.new_asset.exec_()
+        self.new_asset.show()
 
     def handle_add_ue_version(self):
         version = self.new_asset.show_dialog()

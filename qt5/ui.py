@@ -1,13 +1,20 @@
+import sys
 import os
 import webbrowser
 import queue
 from qt5.workers import AssetThumbnailWorker
 from qt5.spin import QtWaitingSpinner
+from qt5.snipper.SnippingMenu import start_snipper
 from PyQt5 import QtGui, uic
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QInputDialog
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QSpacerItem, QApplication
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QApplication
+
+import tkinter as tk
+from PIL import ImageGrab
+import numpy as np
+import cv2
 
 class ScanningUI(QDialog):
     def __init__(self, parent=None):
@@ -40,7 +47,7 @@ class AddRecordUI(QDialog):
             "quick_text": self.quick_text.toPlainText(),
         }
 
-class AddNewAsset(QDialog):
+class AddNewAsset(QWidget):
     def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.settings = settings
@@ -48,6 +55,7 @@ class AddNewAsset(QDialog):
 
         self.asset_directory_button.clicked.connect(lambda : self.handle_select_file(self.asset_directory_field))
         self.asset_thumbnail_button.clicked.connect(lambda : self.handle_select_file(self.asset_thumbnail_field, False))
+        self.screenshot_button.clicked.connect(self.handle_snapshot)
         self.generic_file_button.clicked.connect(lambda : self.handle_select_file(self.generic_file_field, False))
         self.generic_thumb_button.clicked.connect(lambda : self.handle_select_file(self.generic_thumb_field, False))
 
@@ -98,6 +106,11 @@ class AddNewAsset(QDialog):
                     "icon": self.generic_thumb_field.text(),
                     }
         }
+
+    def handle_snapshot(self):
+        snipping_menu = start_snipper()
+        print('cakes')
+        
 
 class ProjectOption(QWidget):
     def __init__(self, name, path):
@@ -199,7 +212,6 @@ class AssetResults(QDialog):
         image.loadFromData(data)
         self.widgets[index].thumbnail.setPixmap(QtGui.QPixmap(image).scaled(150, 150, Qt.KeepAspectRatio))
 
-
 class AssetResultWidget(QWidget):
     clicked = pyqtSignal(list)
 
@@ -267,7 +279,6 @@ class SettingsUI(QDialog):
                 "assetsDefaultProject": self.default_project_field.text(),
                 "assetsDriveDirId": self.assets_drive_id.text(),
                }
-
 
 class SheetsEngineUI(QMainWindow):
 
@@ -416,7 +427,6 @@ class SheetsEngineUI(QMainWindow):
                 topics_chosen.append(cb.text())
         return topics_chosen
 
-
 def alert_dialog():
     msgBox = QMessageBox()
     msgBox.setIcon(QMessageBox.Information)
@@ -430,3 +440,56 @@ def alert_dialog():
     returnValue = msgBox.exec()
     if returnValue == QMessageBox.Ok:
         print('OK')
+
+
+
+class MyWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        print(self.isWindow())
+        print(self.accessibleName())
+        root = tk.Tk()
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        self.setGeometry(0, 0, screen_width, screen_height)
+        self.setWindowTitle(' ')
+        self.begin = QPoint()
+        self.end = QPoint()
+        self.setWindowOpacity(0.3)
+        QApplication.setOverrideCursor(
+            QtGui.QCursor(Qt.CrossCursor)
+        )
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        print('Capture the screen...')
+        self.show()
+
+    def paintEvent(self, event):
+        qp = QtGui.QPainter(self)
+        qp.setPen(QtGui.QPen(QtGui.QColor('black'), 3))
+        qp.setBrush(QtGui.QColor(128, 128, 255, 128))
+        qp.drawRect(QRect(self.begin, self.end))
+
+    def mousePressEvent(self, event):
+        self.begin = event.pos()
+        self.end = self.begin
+        self.update()
+
+    def mouseMoveEvent(self, event):
+        self.end = event.pos()
+        self.update()
+
+    def mouseReleaseEvent(self, event):
+        self.close()
+
+        x1 = min(self.begin.x(), self.end.x())
+        y1 = min(self.begin.y(), self.end.y())
+        x2 = max(self.begin.x(), self.end.x())
+        y2 = max(self.begin.y(), self.end.y())
+
+        img = ImageGrab.grab(bbox=(x1, y1, x2, y2))
+        img.save('capture.png')
+        img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+
+        cv2.imshow('Captured Image', img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()

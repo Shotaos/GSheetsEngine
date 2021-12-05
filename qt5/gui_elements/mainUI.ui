@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>SearchEngine</string>
   </property>
+  <property name="accessibleName">
+   <string>main_window</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -216,8 +219,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>628</width>
-            <height>60</height>
+            <width>632</width>
+            <height>69</height>
            </rect>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -330,6 +333,9 @@
          <property name="contextMenuPolicy">
           <enum>Qt::CustomContextMenu</enum>
          </property>
+         <property name="accessibleName">
+          <string>main_window</string>
+         </property>
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
@@ -387,7 +393,7 @@
          <x>0</x>
          <y>0</y>
          <width>1024</width>
-         <height>60</height>
+         <height>69</height>
         </rect>
        </property>
        <layout class="QHBoxLayout" name="filter_btns_layout"/>

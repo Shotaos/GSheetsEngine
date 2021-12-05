@@ -1,6 +1,6 @@
 import sys
 from os.path import basename
-from PyQt5.QtCore import QPoint, Qt, QRect
+from PyQt5.QtCore import QPoint, Qt, QRect, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMainWindow, QApplication, QPushButton, QMenu, QFileDialog
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
 
@@ -13,14 +13,15 @@ class Menu(QMainWindow):
     default_title = "Snipping Tool"
 
     # numpy_image is the desired image we want to display given as a numpy array.
-    def __init__(self, numpy_image=None, snip_number=None, start_position=(300, 300, 350, 250)):
+    def __init__(self, numpy_image=None, snip_number=None, start_position=(300, 300, 300, 50), set_thumbnail_signal=None):
         super().__init__()
-
+        self.set_thumbnail_signal = set_thumbnail_signal
         self.drawing = False
         self.brushSize = 3
         self.brushColor = Qt.red
         self.lastPoint = QPoint()
         self.title = Menu.default_title
+        self.true_close = True
         
         # New snip
         new_snip_action = QAction('New', self)
@@ -54,7 +55,7 @@ class Menu(QMainWindow):
         exit_window = QAction('Exit', self)
         exit_window.setShortcut('Ctrl+Q')
         exit_window.setStatusTip('Exit application')
-        exit_window.triggered.connect(self.close)
+        # exit_window.triggered.connect(lambda: self.close_snipping_tool(self.true_close))
 
         self.toolbar = self.addToolBar('Exit')
         self.toolbar.addAction(new_snip_action)
@@ -63,18 +64,17 @@ class Menu(QMainWindow):
         self.toolbar.addWidget(brush_size_button)
         self.toolbar.addAction(exit_window)
 
-        self.snippingTool = SnippingWidget()
+        self.snippingTool = SnippingWidget(set_thumbnail_signal=self.set_thumbnail_signal)
         self.setGeometry(*start_position)
 
         # From the second initialization, both arguments will be valid
         if numpy_image is not None and snip_number is not None:
             self.image = self.convert_numpy_img_to_qpixmap(numpy_image)
             self.change_and_set_title("Snip #{0}".format(snip_number))
+            self.resize(self.image.width(), self.image.height() + self.toolbar.height())
         else:
             self.image = QPixmap("background.PNG")
             self.change_and_set_title(Menu.default_title)
-
-        self.resize(self.image.width(), self.image.height() + self.toolbar.height())
         self.show()
 
         def change_brush_color(new_color):
@@ -85,6 +85,7 @@ class Menu(QMainWindow):
 
     # snippingTool.start() will open a new window, so if this is the first snip, close the first window.
     def new_image_window(self):
+        self.true_close = False
         self.close()
         self.snippingTool.start()
 
@@ -93,7 +94,8 @@ class Menu(QMainWindow):
         if file_path:
             self.image.save(file_path)
             self.change_and_set_title(basename(file_path))
-            print(self.title, 'Saved')
+            self.set_thumbnail_signal.emit(file_path)
+            self.close()
 
     def change_and_set_title(self, new_title):
         self.title = new_title
@@ -123,16 +125,15 @@ class Menu(QMainWindow):
 
     # TODO exit application when we exit all windows
     def closeEvent(self, event):
-        event.accept()
+        if self.true_close:
+            self.set_thumbnail_signal.emit('')
+        self.close()
 
     @staticmethod
     def convert_numpy_img_to_qpixmap(np_img):
         height, width, channel = np_img.shape
         bytesPerLine = 3 * width
         return QPixmap(QImage(np_img.data, width, height, bytesPerLine, QImage.Format_RGB888).rgbSwapped())
-
-def start_snipper():
-    return Menu()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

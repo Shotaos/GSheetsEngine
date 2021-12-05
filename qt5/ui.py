@@ -1,12 +1,11 @@
-import sys
 import os
 import webbrowser
 import queue
 from qt5.workers import AssetThumbnailWorker
 from qt5.spin import QtWaitingSpinner
-from qt5.snipper.SnippingMenu import start_snipper
+from qt5.snipper.SnippingMenu import Menu
 from PyQt5 import QtGui, uic
-from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QInputDialog
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QApplication
@@ -48,9 +47,11 @@ class AddRecordUI(QDialog):
         }
 
 class AddNewAsset(QWidget):
+    set_thumbnail = pyqtSignal(str)
     def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.settings = settings
+        
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'addNewAsset.ui'), self)
 
         self.asset_directory_button.clicked.connect(lambda : self.handle_select_file(self.asset_directory_field))
@@ -60,6 +61,7 @@ class AddNewAsset(QWidget):
         self.generic_thumb_button.clicked.connect(lambda : self.handle_select_file(self.generic_thumb_field, False))
 
         self.asset_ue_version.addItems(settings.get("assetsuE Versions", []))
+        self.set_thumbnail.connect(self.set_asset_thumbnail)
 
     def handle_select_file(self, field, directory_only=True):
         """
@@ -108,8 +110,28 @@ class AddNewAsset(QWidget):
         }
 
     def handle_snapshot(self):
-        snipping_menu = start_snipper()
-        print('cakes')
+        self.toggle_widget_visibility(False)
+        Menu(set_thumbnail_signal=self.set_thumbnail)
+        
+    def toggle_widget_visibility(self, show=True):
+        screens = QApplication.topLevelWidgets()
+        screen_dict = {}
+        for s in screens:
+            aname=s.accessibleName()
+            if aname in ['main_window','upload_asset_dialog']:
+                screen_dict[aname] = s
+        
+        if show:
+            screen_dict['main_window'].show()
+            screen_dict['upload_asset_dialog'].show()
+        else:
+            screen_dict['main_window'].hide()
+            screen_dict['upload_asset_dialog'].hide()
+
+    def set_asset_thumbnail(self, file_path):
+        if file_path:
+            self.asset_thumbnail_field.setText(file_path)
+        self.toggle_widget_visibility(True)
         
 
 class ProjectOption(QWidget):
@@ -441,55 +463,3 @@ def alert_dialog():
     if returnValue == QMessageBox.Ok:
         print('OK')
 
-
-
-class MyWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-        print(self.isWindow())
-        print(self.accessibleName())
-        root = tk.Tk()
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        self.setGeometry(0, 0, screen_width, screen_height)
-        self.setWindowTitle(' ')
-        self.begin = QPoint()
-        self.end = QPoint()
-        self.setWindowOpacity(0.3)
-        QApplication.setOverrideCursor(
-            QtGui.QCursor(Qt.CrossCursor)
-        )
-        self.setWindowFlags(Qt.FramelessWindowHint)
-        print('Capture the screen...')
-        self.show()
-
-    def paintEvent(self, event):
-        qp = QtGui.QPainter(self)
-        qp.setPen(QtGui.QPen(QtGui.QColor('black'), 3))
-        qp.setBrush(QtGui.QColor(128, 128, 255, 128))
-        qp.drawRect(QRect(self.begin, self.end))
-
-    def mousePressEvent(self, event):
-        self.begin = event.pos()
-        self.end = self.begin
-        self.update()
-
-    def mouseMoveEvent(self, event):
-        self.end = event.pos()
-        self.update()
-
-    def mouseReleaseEvent(self, event):
-        self.close()
-
-        x1 = min(self.begin.x(), self.end.x())
-        y1 = min(self.begin.y(), self.end.y())
-        x2 = max(self.begin.x(), self.end.x())
-        y2 = max(self.begin.y(), self.end.y())
-
-        img = ImageGrab.grab(bbox=(x1, y1, x2, y2))
-        img.save('capture.png')
-        img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
-
-        cv2.imshow('Captured Image', img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()

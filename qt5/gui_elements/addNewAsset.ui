@@ -16,6 +16,9 @@
   <property name="windowTitle">
    <string>Upload Asset</string>
   </property>
+  <property name="accessibleName">
+   <string>upload_asset_dialog</string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">

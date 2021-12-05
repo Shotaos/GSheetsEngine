@@ -12,7 +12,7 @@ class SnippingWidget(QtWidgets.QWidget):
     is_snipping = False
     background = True
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, set_thumbnail_signal=None):
         super(SnippingWidget, self).__init__()
         self.parent = parent
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -24,6 +24,7 @@ class SnippingWidget(QtWidgets.QWidget):
         self.setGeometry(0, 0, screen_width, screen_height)
         self.begin = QtCore.QPoint()
         self.end = QtCore.QPoint()
+        self.set_thumbnail_signal = set_thumbnail_signal
 
     def start(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -83,5 +84,5 @@ class SnippingWidget(QtWidgets.QWidget):
         img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
 
         # add to the snips list the object that opens a window of the image
-        SnippingMenu.Menu(img, 1, (x1, y1, x2, y2))
+        SnippingMenu.Menu(img, 1, (x1 + 50, y1 + 50, x2, y2), set_thumbnail_signal=self.set_thumbnail_signal)
         self.close()

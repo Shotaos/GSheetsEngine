@@ -133,3 +133,6 @@ credentials.json
 token.json
 
 *.swp
+
+# Test folder
+test_folder/**

@@ -51,18 +51,11 @@ class Menu(QMainWindow):
         save_action.setStatusTip('Save')
         save_action.triggered.connect(self.save_file)
 
-        # Exit
-        exit_window = QAction('Exit', self)
-        exit_window.setShortcut('Ctrl+Q')
-        exit_window.setStatusTip('Exit application')
-        # exit_window.triggered.connect(lambda: self.close_snipping_tool(self.true_close))
-
         self.toolbar = self.addToolBar('Exit')
         self.toolbar.addAction(new_snip_action)
         self.toolbar.addAction(save_action)
         self.toolbar.addWidget(brush_color_button)
         self.toolbar.addWidget(brush_size_button)
-        self.toolbar.addAction(exit_window)
 
         self.snippingTool = SnippingWidget(set_thumbnail_signal=self.set_thumbnail_signal)
         self.setGeometry(*start_position)
@@ -86,8 +79,9 @@ class Menu(QMainWindow):
     # snippingTool.start() will open a new window, so if this is the first snip, close the first window.
     def new_image_window(self):
         self.true_close = False
-        self.close()
         self.snippingTool.start()
+        self.close()
+        
 
     def save_file(self):
         file_path, name = QFileDialog.getSaveFileName(self, "Save file", self.title, "PNG Image file (*.png)")

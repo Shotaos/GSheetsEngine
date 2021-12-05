@@ -5,15 +5,9 @@ from qt5.workers import AssetThumbnailWorker
 from qt5.spin import QtWaitingSpinner
 from qt5.snipper.SnippingMenu import Menu
 from PyQt5 import QtGui, uic
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QCheckBox, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QInputDialog
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog, QPushButton, QApplication
-
-import tkinter as tk
-from PIL import ImageGrab
-import numpy as np
-import cv2
+from PyQt5.QtWidgets import QApplication, QPushButton,  QCheckBox, QListView, QListWidget, QListWidgetItem, QMainWindow, QTableWidgetItem, QLabel, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QInputDialog, QScrollBar, QMainWindow, QTableWidgetItem, QLabel, QMessageBox, QDialog
 
 class ScanningUI(QDialog):
     def __init__(self, parent=None):
@@ -61,6 +55,10 @@ class AddNewAsset(QWidget):
         self.generic_thumb_button.clicked.connect(lambda : self.handle_select_file(self.generic_thumb_field, False))
 
         self.asset_ue_version.addItems(settings.get("assetsuE Versions", []))
+
+        #TODO get thumbnail folder from settings
+        self.thumbnail_folder = r'C:\Users\irakli\Desktop\GsheetEngine Version 2\GSheetsEngine\test_folder'
+        self.initilize_thumbnail_gallery()
         self.set_thumbnail.connect(self.set_asset_thumbnail)
 
     def handle_select_file(self, field, directory_only=True):
@@ -120,7 +118,6 @@ class AddNewAsset(QWidget):
             aname=s.accessibleName()
             if aname in ['main_window','upload_asset_dialog']:
                 screen_dict[aname] = s
-        
         if show:
             screen_dict['main_window'].show()
             screen_dict['upload_asset_dialog'].show()
@@ -133,6 +130,33 @@ class AddNewAsset(QWidget):
             self.asset_thumbnail_field.setText(file_path)
         self.toggle_widget_visibility(True)
         
+    def initilize_thumbnail_gallery(self):
+        # Configure QListWidget settings
+        self.thumbnail_view.setViewMode(QListView.IconMode)
+        self.thumbnail_view.setIconSize(QSize(100,50))
+        
+
+        
+        path = os.walk(self.thumbnail_folder)
+        for root, directories, files in path:
+            for image in files:
+                item = QListWidgetItem(QtGui.QIcon(os.path.join(self.thumbnail_folder, image)), os.path.basename(image))
+                self.thumbnail_view.addItem(item)
+        self.thumbnail_view.setFlow(QListView.LeftToRight)
+        self.thumbnail_view.setWordWrap(False)
+
+        # scroll bar
+        scroll_bar = QScrollBar(self)
+        self.thumbnail_view.setHorizontalScrollBar(scroll_bar)
+        self.thumbnail_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.thumbnail_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.thumbnail_view.setResizeMode(QListWidget.Adjust)
+
+        self.thumbnail_view.itemDoubleClicked.connect(self.handle_thumbnail_double_click)
+    
+    def handle_thumbnail_double_click(self, value):
+        image_path = os.path.join(self.thumbnail_folder, value.text())
+        self.asset_thumbnail_field.setText(image_path)
 
 class ProjectOption(QWidget):
     def __init__(self, name, path):

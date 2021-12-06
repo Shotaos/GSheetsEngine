@@ -189,7 +189,12 @@ class DownloadAsset(QDialog):
         if data[0] != 'Asset':
             self.projects_container.setEnabled(False)
 
+        self.scroll.hide()
+        self.show_hide_button.setText('Show Projects')
+        self.adjustSize()
+
         self.select_file.clicked.connect(self.handle_select_file)
+        self.show_hide_button.clicked.connect(self.toggle_project_list_visibility)
 
         q = queue.Queue()
         q.put((0, thumbnail))
@@ -220,6 +225,16 @@ class DownloadAsset(QDialog):
                 result.append(os.path.join(project.project_path.text(), 'Content'))
 
         return (self.data[5], self.overwrite.isChecked(), result)
+
+    def toggle_project_list_visibility(self):
+        if not self.scroll.isHidden():
+            self.scroll.hide()
+            self.show_hide_button.setText('Show Projects')
+            self.adjustSize()
+        else:
+            self.scroll.show()
+            self.show_hide_button.setText('Hide Projects')
+
 
 class AssetResults(QDialog):
     def __init__(self, assets, parent=None):

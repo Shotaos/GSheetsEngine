@@ -30,6 +30,7 @@ class SheetsController():
                 "assetsSheetId": None,
                 "assetsDefaultProject": None,
                 "assetsDriveDirId": None,
+                "premadeImages": None,
                 "assetsuE Versions": ["UE 4.27"],
                 "assetsProjects": [],
                 "excludeSheets" : []
@@ -114,7 +115,6 @@ class SheetsController():
                     self._view.addRow([title, category, code_link], link)
         self._view.stop_spinner()
 
-        
     def _init_topics(self, sheets):
         self._sheets = sheets
         filtered_sheets = [sheet for sheet in sheets if sheet not in self.settings['excludeSheets']]

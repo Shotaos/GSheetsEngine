@@ -57,7 +57,7 @@ class AddNewAsset(QWidget):
         self.asset_ue_version.addItems(settings.get("assetsuE Versions", []))
 
         #TODO get thumbnail folder from settings
-        self.thumbnail_folder = r'C:\Users\irakli\Desktop\GsheetEngine Version 2\GSheetsEngine\test_folder'
+        self.thumbnail_folder = settings.get("premadeImages", os.getcwd())
         self.initilize_thumbnail_gallery()
         self.set_thumbnail.connect(self.set_asset_thumbnail)
 
@@ -235,7 +235,6 @@ class DownloadAsset(QDialog):
             self.scroll.show()
             self.show_hide_button.setText('Hide Projects')
 
-
 class AssetResults(QDialog):
     def __init__(self, assets, parent=None):
         super().__init__(parent)
@@ -291,55 +290,6 @@ class AssetResultWidget(QWidget):
     def leaveEvent(self, event):
         pass
         #self.setStyleSheet('#name{font-weight:normal;}')
-
-class SettingsUI(QDialog):
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        uic.loadUi(os.path.join('qt5', 'gui_elements', 'settUI.ui'), self)
-        self.settings = {}
-        self.default_project_button.clicked.connect(self.handle_select_file)
-
-    def _add_topic_checkboxes(self, topics, excluded):
-        self.sheets = []
-        positions = [(i, j) for i in range(len(topics)) for j in range(4)]
-        for i, topic in enumerate(topics):
-            cb = QCheckBox(topic)
-            cb.setChecked(topic in excluded)
-            self.exclude_sheets.addWidget(cb, *positions[i])
-            self.sheets.append(cb)
-
-    def set_setting(self, key, value):
-        self.settings[key] = value
-
-    def set_settings(self, settings, sheets):
-        self.settings = {**settings, **self.settings}
-        self.sheetId.setText(settings['sheetId'])
-        self.assets_sheet_id.setText(settings['assetsSheetId'])
-        self.default_project_field.setText(settings['assetsDefaultProject'])
-        self.assets_drive_id.setText(settings['assetsDriveDirId'])
-        self._add_topic_checkboxes(sheets, settings['excludeSheets'])
-
-    def handle_select_file(self):
-        dlg = QFileDialog()
-        dlg.setFileMode(QFileDialog.Directory)
-        if dlg.exec_():
-            path = dlg.selectedFiles()[0]
-            self.default_project_field.setText(path)
-
-    def get_settings(self):
-        topics_excluded = []
-        for cb in self.sheets:
-            if cb.isChecked():
-                topics_excluded.append(cb.text())
-        return {
-                **self.settings,
-                'sheetId': self.sheetId.text(),
-                'excludeSheets': topics_excluded,
-                "assetsSheetId": self.assets_sheet_id.text(),
-                "assetsDefaultProject": self.default_project_field.text(),
-                "assetsDriveDirId": self.assets_drive_id.text(),
-               }
 
 class SheetsEngineUI(QMainWindow):
 
@@ -471,7 +421,6 @@ class SheetsEngineUI(QMainWindow):
             self.topic_checkboxes.append(cb)
         
 
-
     def copy_to_clipboard(self, text):
         clipboard = QApplication.clipboard()
         clipboard.setText(text, QtGui.QClipboard.Clipboard)
@@ -501,4 +450,63 @@ def alert_dialog():
     returnValue = msgBox.exec()
     if returnValue == QMessageBox.Ok:
         print('OK')
+
+class SettingsUI(QDialog):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        uic.loadUi(os.path.join('qt5', 'gui_elements', 'settUI.ui'), self)
+        self.settings = {}
+        self.default_project_button.clicked.connect(self.handle_select_file)
+        self.premade_gallery_button.clicked.connect(self.handle_select_file_images)
+
+    def _add_topic_checkboxes(self, topics, excluded):
+        self.sheets = []
+        positions = [(i, j) for i in range(len(topics)) for j in range(4)]
+        for i, topic in enumerate(topics):
+            cb = QCheckBox(topic)
+            cb.setChecked(topic in excluded)
+            self.exclude_sheets.addWidget(cb, *positions[i])
+            self.sheets.append(cb)
+
+    def set_setting(self, key, value):
+        self.settings[key] = value
+
+    def set_settings(self, settings, sheets):
+        self.settings = {**settings, **self.settings}
+        self.sheetId.setText(settings['sheetId'])
+        self.assets_sheet_id.setText(settings['assetsSheetId'])
+        self.default_project_field.setText(settings['assetsDefaultProject'])
+        self.assets_drive_id.setText(settings['assetsDriveDirId'])
+        self.premade_images_input.setText(settings.get('premadeImages', None))
+        self._add_topic_checkboxes(sheets, settings['excludeSheets'])
+
+    def handle_select_file(self):
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.Directory)
+        if dlg.exec_():
+            path = dlg.selectedFiles()[0]
+            self.default_project_field.setText(path)
+    
+    def handle_select_file_images(self):
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.Directory)
+        if dlg.exec_():
+            path = dlg.selectedFiles()[0]
+            self.premade_images_input.setText(path)
+
+    def get_settings(self):
+        topics_excluded = []
+        for cb in self.sheets:
+            if cb.isChecked():
+                topics_excluded.append(cb.text())
+        return {
+                **self.settings,
+                'sheetId': self.sheetId.text(),
+                'excludeSheets': topics_excluded,
+                "assetsSheetId": self.assets_sheet_id.text(),
+                "assetsDefaultProject": self.default_project_field.text(),
+                "premadeImages": self.premade_images_input.text(),
+                "assetsDriveDirId": self.assets_drive_id.text(),
+               }
 

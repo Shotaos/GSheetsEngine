@@ -222,7 +222,7 @@ class DownloadAsset(QDialog):
 
         for project in self.projects:
             if project.checked.isChecked():
-                result.append(os.path.join(project.project_path.text(), 'Content'))
+                result.append(os.path.join(project.project_path.text(), 'Content', 'Imported'))
 
         return (self.data[5], self.overwrite.isChecked(), result)
 

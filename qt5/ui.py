@@ -1,6 +1,7 @@
 import os
 import webbrowser
 import queue
+from pathlib import Path
 from qt5.workers import AssetThumbnailWorker
 from qt5.spin import QtWaitingSpinner
 from qt5.snipper.SnippingMenu import Menu
@@ -219,6 +220,20 @@ class DownloadAsset(QDialog):
 
     def get_data(self):
         result = [] if self.manual_path is None else [self.manual_path]
+        if self.autodetect_ue_checkbox.isChecked() and result:
+            root_path = result[0]
+            for par in Path(root_path).parents:
+                if os.path.basename(par) == 'Content':
+                    result =[os.path.join(par, 'Imported')]
+                    print('parent', result)
+
+            for root, directories, files in os.walk(root_path):
+                for directory in directories:
+                    if os.path.basename(directory) == 'Content':
+                        result =[os.path.join(par, 'Imported')]
+                        print('child', result)
+
+                break
 
         for project in self.projects:
             if project.checked.isChecked():

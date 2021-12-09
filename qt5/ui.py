@@ -130,19 +130,22 @@ class AddNewAsset(QWidget):
         if file_path:
             self.asset_thumbnail_field.setText(file_path)
         self.toggle_widget_visibility(True)
+        self.initilize_thumbnail_gallery()
         
     def initilize_thumbnail_gallery(self):
         # Configure QListWidget settings
         self.thumbnail_view.setViewMode(QListView.IconMode)
         self.thumbnail_view.setIconSize(QSize(100,50))
         
-
-        
         path = os.walk(self.thumbnail_folder)
         for root, directories, files in path:
             for image in files:
-                item = QListWidgetItem(QtGui.QIcon(os.path.join(self.thumbnail_folder, image)), os.path.basename(image))
-                self.thumbnail_view.addItem(item)
+                try:
+                    item = QListWidgetItem(QtGui.QIcon(os.path.join(self.thumbnail_folder, image)), os.path.basename(image))
+                    self.thumbnail_view.addItem(item)
+                except Exception as e:
+                    print(e)
+            break
         self.thumbnail_view.setFlow(QListView.LeftToRight)
         self.thumbnail_view.setWordWrap(False)
 
@@ -171,6 +174,7 @@ class DownloadAsset(QDialog):
     def __init__(self, data, settings, parent=None):
         super().__init__(parent)
         uic.loadUi(os.path.join('qt5', 'gui_elements', 'downloadAsset.ui'), self)
+
         self.data = data
         self.manual_path = None
         self.projects = []
@@ -181,6 +185,10 @@ class DownloadAsset(QDialog):
         self.projects_layout = self.projects_list.layout()
         self.name.setText(name)
         self.ue_version.setText(version)
+
+        # Set UE checked if UE asset
+        if data[0].lower() == 'asset':
+            self.autodetect_ue_checkbox.setChecked(True)
 
         for name, project_path in settings['assetsProjects']:
             project = ProjectOption(name, project_path)
@@ -220,19 +228,16 @@ class DownloadAsset(QDialog):
 
     def get_data(self):
         result = [] if self.manual_path is None else [self.manual_path]
-        if self.autodetect_ue_checkbox.isChecked() and result:
+        if self.autodetect_ue_checkbox.isChecked() and result and self.data[0].lower() == 'asset':
             root_path = result[0]
             for par in Path(root_path).parents:
                 if os.path.basename(par) == 'Content':
                     result =[os.path.join(par, 'Imported')]
-                    print('parent', result)
 
             for root, directories, files in os.walk(root_path):
                 for directory in directories:
                     if os.path.basename(directory) == 'Content':
                         result =[os.path.join(par, 'Imported')]
-                        print('child', result)
-
                 break
 
         for project in self.projects:
